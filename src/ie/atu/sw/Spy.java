@@ -24,7 +24,7 @@ public class Spy {
 		this.width = width;
 		this.height = height;
 		try {
-			network = Aicme4jUtils.load("./pilot_tan_tan");
+			network = Aicme4jUtils.load("./pilot_best_tune1");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

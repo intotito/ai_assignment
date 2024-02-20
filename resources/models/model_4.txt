@@ -1,0 +1,19 @@
+
+S/N	Name	 Activation Function	Nodes
+1	Input		-		80
+2	Hidden1	 	TAHN		24
+3	Hidden2		TANH		20
+4	Output		TANH		3
+
+Alpha	- 0.01	
+Beta 	- 0.95
+Epoch	- 500
+Acc.	- 0.00001
+
+Loss Function - SSE
+
+Train Data - 3081
+Prediction Accuracy 	-	99.97%
+MSE 			-	97.50%
+
+Train time - 33seconds
