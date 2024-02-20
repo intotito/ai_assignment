@@ -27,7 +27,7 @@ public class GameView extends JPanel implements ActionListener{
 	private static final int MIN_TOP 			= 2;
 	private static final int MIN_BOTTOM 		= 18;
 	private static final int PLAYER_COLUMN 		= 15;
-	private static final int TIMER_INTERVAL 	= 100;
+	private static final int TIMER_INTERVAL 	= 200;
 	
 	private static final byte ONE_SET 			=  1;
 	private static final byte ZERO_SET 			=  0;
@@ -84,6 +84,10 @@ public class GameView extends JPanel implements ActionListener{
 		for (int i = 0; i < MODEL_WIDTH; i++) {
 			model.add(new byte[MODEL_HEIGHT]);
 		}
+	}
+	
+	public Spy getSpy() {
+		return spy;
 	}
 	
 	public void setSprite(Sprite s) {
@@ -162,7 +166,9 @@ public class GameView extends JPanel implements ActionListener{
 	 */
 	private void autoMove() {
 	//	move(current().nextInt(-1, 2)); //Move -1 (up), 0 (nowhere), 1 (down)
-		move(spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05}));
+		//int prediction = spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05});
+		int prediction = spy.modelPredict(sample(), playerRow, PLAYER_COLUMN, 3);
+		move(prediction);
 	}
 
 	
