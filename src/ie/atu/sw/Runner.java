@@ -8,7 +8,7 @@ public class Runner {
 		
 		/*
 		 * Always run a GUI in a separate thread from the main thread.
-		 */
+		 */	
 		SwingUtilities.invokeAndWait(() -> { //Sounds like the Command Pattern at work!
 			try {
 				new GameWindow();

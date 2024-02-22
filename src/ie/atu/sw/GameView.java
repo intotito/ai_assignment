@@ -194,11 +194,11 @@ public class GameView extends JPanel implements ActionListener{
 		 * arithmetic as shown below. Alternatively, add a key stroke 
 		 * to fire an event that starts the sampling.
 		 */
-		if (time % 10 == 0) {
+		if (time % 20 == 0) {
 			
-		//	  double[] trainingRow = sample();
-		//	  System.out.println(Arrays.toString(trainingRow));
-		//	  spy.decipher(trainingRow);
+	//		  double[] trainingRow = sample();
+	//		  System.out.println(Arrays.toString(trainingRow));
+	//		  spy.decipher(trainingRow);
 			 
 		}
 	}
