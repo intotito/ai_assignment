@@ -166,8 +166,8 @@ public class GameView extends JPanel implements ActionListener{
 	 */
 	private void autoMove() {
 	//	int prediction = current().nextInt(-1, 2); //Move -1 (up), 0 (nowhere), 1 (down)
-	//	int prediction = spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05});
-		int prediction = spy.modelPredict(sample(), playerRow, PLAYER_COLUMN, 3);
+		int prediction = spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05});
+	//	int prediction = spy.modelPredict(sample(), playerRow, PLAYER_COLUMN, 3);
 		move(prediction);
 	}
 

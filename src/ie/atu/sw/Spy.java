@@ -66,7 +66,7 @@ public class Spy {
 		if (recording)
 			return;
 		try {
-			File file = new File("./train_pilot.csv");
+			File file = new File("./new_test.csv");
 			StringBuffer ss = new StringBuffer();
 			if (!file.exists()) {
 				ss.append(IntStream.range(0, (predSize + 1) * height).mapToObj(i -> getTitle(predSize, i))

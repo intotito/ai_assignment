@@ -30,11 +30,11 @@ public class PilotModel extends TestPlatform{
 	}
 	
 	public static void main(String[] arg) throws Exception{
-		new PilotModel(31)
-		.loadData("./train_pilot.csv", 80, 3, 0.85)
+		new PilotModel(3143)
+		.loadData("./new_test.csv", 80, 3, 0.2	)
 //		.train("./pilot_best_tune8")
-		.loadModel("./pilot_best_tune2")
-		.testTrain(false)
+		.loadModel("./pilot_tan_tan ")
+//		.testTrain(false)
 		.testTest(true);
 	}
 }
