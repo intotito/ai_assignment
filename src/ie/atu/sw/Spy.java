@@ -28,10 +28,14 @@ public class Spy {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		double[] aa = {0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	1.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	1.000,	1.000,	1.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	0.000,	1.000,	1.000,	1.000,	1.000,	1.000,	1.000};
-		this.decipher(aa, 4);
+		double[] aa = {		0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	1,	1,	0,	0,	0,	
+						0,	0,	0,	0,  0,	0,	0,	0,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
+						1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	1,	1,	1,	1,	1
+			};
+		
+//		this.decipher(aa, 4);
 	}
-
+	//private String getTitle(int predSize, int i, int HEIGHT, int WIDTH){
 	private String getTitle(int predSize, int i) {
 		if (i < height) {
 			return "cord_" + String.format("%02d", i);
@@ -62,6 +66,7 @@ public class Spy {
 		}
 	}
 
+	//public void startRecording(int predSize, int HEIGHT, int WIDTH){
 	public void startRecording(int predSize) {
 		if (recording)
 			return;
@@ -85,7 +90,7 @@ public class Spy {
 		}
 
 	}
-
+	// public void decipher(double[] sample, int HEIGHT, int WIDTH){
 	public void decipher(double[] sample) {
 		for (int i = 0; i < sample.length; i++) {
 			int y = (height * i) - (i / width) * (width * height - 1);
@@ -102,14 +107,17 @@ public class Spy {
 		System.out.println("-----------------------------------------------------------");
 	}
 
+	// public in getColumn(int index, int HEIGHT, int WIDTH){
 	public int getColumn(int index) {
 		return (index / height);
 	}
 
+	//public int getTop(int col, double[] sample, int HEIGHT)
 	public int getTop(int col, double[] sample) {
 		return (int) Arrays.stream(sample).skip(col * height).mapToLong(Math::round).takeWhile(i -> i == 1).count();
 	}
 
+	// public int getBottom(int col, double[] sample, HEIGHT){
 	public int getBottom(int col, double[] sample) {
 		int count = 0;
 		for (int i = 0; i < height; i++) {
@@ -123,6 +131,7 @@ public class Spy {
 		return count;
 	}
 
+	// public double[] getDerivatives(double[] sample, int width, int HEIGHT){
 	public double[] getDerivatives(double[] sample, int width) {
 		double[] value = new double[width - 1];
 		for (int i = 0; i < value.length; i++) {
@@ -145,6 +154,7 @@ public class Spy {
 		return value;
 	}
 
+	// public double[] getNextColumn(int index, double[] sample, int width, int HEIGHT){
 	public double[] getNextColumn(int index, double[] sample, int width) {
 		int c = getColumn(index);
 		int i = height * (c + 1);
@@ -154,12 +164,14 @@ public class Spy {
 		return value;
 	}
 
+	// public int getIndex(int row, int col, int HEIGHT)
 	public int getIndex(int row, int col) {
 		int index = col * height + row;
 		// System.out.println("Index: " + index);
 		return index;
 	}
 
+	// public int modelPredict(double[] sample, int player_row, int player_col, int predSize, int HEIGHT){
 	public int modelPredict(double[] sample, int player_row, int player_col, int predSize) {
 		try {
 			double[] player_pos = IntStream.range(0, height).mapToDouble(i -> i == player_row ? 1 : 0).toArray();
@@ -173,6 +185,7 @@ public class Spy {
 		}
 	}
 
+	// public int predict(double[] sample, int player_row, int player_col, int predSize, double[] weights, int HEIGHT){
 	public int predict(double[] sample, int player_row, int player_col, int predSize, double[] weights) {
 		double[] suggestions = getDerivatives(getNextColumn(getIndex(player_row, player_col), sample, predSize),
 				predSize);

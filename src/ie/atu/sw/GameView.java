@@ -17,6 +17,12 @@ import java.util.LinkedList;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import ie.atu.sw.model.Agent;
+import ie.atu.sw.model.NeuralNetworkAgent;
+import ie.atu.sw.model.ProgrammedAgent;
+import ie.atu.sw.model.Trainer;
+import jhealy.aicme4j.net.NeuralNetwork;
+
 public class GameView extends JPanel implements ActionListener{
 	//Some constants
 	private static final long serialVersionUID	= 1L;
@@ -60,13 +66,15 @@ public class GameView extends JPanel implements ActionListener{
 	
 	private boolean auto;
 
-	private Spy spy;
+//	private Spy spy;
+	private Agent agent;
 	
 	public GameView(boolean auto) throws Exception{
 		this.auto = auto; //Use the autopilot
 		setBackground(Color.LIGHT_GRAY);
 		setDoubleBuffered(true);
-		spy = new Spy(MODEL_WIDTH, MODEL_HEIGHT);
+//		spy = new Spy(MODEL_WIDTH, MODEL_HEIGHT);
+		agent = new NeuralNetworkAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
 		//Creates a viewing area of 900 x 600 pixels
 		dim = new Dimension(MODEL_WIDTH * SCALING_FACTOR, MODEL_HEIGHT * SCALING_FACTOR);
     	super.setPreferredSize(dim);
@@ -86,8 +94,8 @@ public class GameView extends JPanel implements ActionListener{
 		}
 	}
 	
-	public Spy getSpy() {
-		return spy;
+	public Trainer getTrainer() {
+		return (Trainer)agent;
 	}
 	
 	public void setSprite(Sprite s) {
@@ -166,7 +174,8 @@ public class GameView extends JPanel implements ActionListener{
 	 */
 	private void autoMove() {
 	//	int prediction = current().nextInt(-1, 2); //Move -1 (up), 0 (nowhere), 1 (down)
-		int prediction = spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05});
+	//	int prediction = spy.predict(sample(), playerRow, PLAYER_COLUMN, 3, new double[]{0.75, 0.25, 0.1, 0.05, 0.05});
+		int prediction = agent.predict(playerRow);
 	//	int prediction = spy.modelPredict(sample(), playerRow, PLAYER_COLUMN, 3);
 		move(prediction);
 	}
@@ -194,8 +203,8 @@ public class GameView extends JPanel implements ActionListener{
 		 * arithmetic as shown below. Alternatively, add a key stroke 
 		 * to fire an event that starts the sampling.
 		 */
-		if (time % 20 == 0) {
-			
+		if (agent.look()){//(time % 20 == 0) {
+			agent.sample(sample());
 	//		  double[] trainingRow = sample();
 	//		  System.out.println(Arrays.toString(trainingRow));
 	//		  spy.decipher(trainingRow);
@@ -206,7 +215,7 @@ public class GameView extends JPanel implements ActionListener{
 	
 	/*
 	 * Generate the next layer of the cavern. Use the linked list to
-	 * move the current head element to the tail and then randomly
+	 * move the current head element to the tail and then randoSmly
 	 * decide whether to increase or decrease the cavern. 
 	 */
 	private void generateNext() {

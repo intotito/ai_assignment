@@ -62,9 +62,11 @@ public class GameWindow implements KeyListener{
 			view.reset(); 						//Reset the view and bail out			
 			return;
 		} else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-			view.getSpy().startRecording(3);
+	//		view.getSpy().startRecording(3);
+			view.getTrainer().startRecording();
 		}else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-			view.getSpy().stopRecording();
+	//		view.getSpy().stopRecording();
+			view.getTrainer().stopRecording();
 		}
 		
 		int step = switch(e.getKeyCode()) {

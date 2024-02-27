@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,10 +32,44 @@ public abstract class TestPlatform {
 	protected int seed;
 
 	public abstract TestPlatform train(String fileName) throws Exception;
+	
+	public void crossValidate(int k, int seed) throws  Exception {
+		Stats stats = new Stats();
+		Random random = new Random(seed);
+		Integer[] indices = IntStream.range(0,  trainX.length).boxed().toArray(Integer[]::new);
+		List<Integer> in = Arrays.asList(indices);
+		Collections.shuffle(in, random);
+		indices = in.stream().mapToInt(Integer::intValue).boxed().toArray(Integer[]::new);
+		System.out.println("Length: indices-> " + indices.length + " train data -> " + trainX.length + " Count -> " + indices.length / k);
+		System.out.println(Arrays.toString(indices));
+		for(int i = 0; i < k; i++) {
+			int count = indices.length / k;
+			double[][] trainXIJ = new double[count * (k - 1)][];
+			double[][] trainExpectedIJ = new double[count * (k - 1)][];
+
+			double[][] validXIJ = new double[count][];
+			double[][] validExpectedIJ = new double[count][];
+			for(int j = 0, vC = 0, tC = 0; j < (indices.length / k) * k; j++) {
+				if(j >= i * count && j < (i + 1) * count) {
+					validXIJ[vC] = trainX[indices[j]];
+					validExpectedIJ[vC] = trainExpected[indices[j]];
+					vC++;
+				} else {
+					trainXIJ[tC] = trainX[indices[j]];
+					trainExpectedIJ[tC] = trainExpected[indices[j]];
+					tC++;
+				}
+			}
+			stats.scoreModel(validExpectedIJ, getResultSoftMax(validXIJ, network), ModelType.CLASSIFICATION);
+			System.out.println("K-Fold i: " + i + " ===============================================================================\n\n");
+
+		}
+	}
 
 	protected double[][][] splitData(double[][] data, double fraction, int seed) {
 		List<double[]> dataSet = new ArrayList<double[]>(Arrays.asList(data));
-		Collections.shuffle(dataSet, new Random(seed));
+		Random r = new Random(seed);
+		Collections.shuffle(dataSet, r);
 		List<double[]> trainSet = new ArrayList<>();
 		for (int i = 0; i < data.length * fraction; i++) {
 			trainSet.add(dataSet.remove(ThreadLocalRandom.current().nextInt(0, dataSet.size())));

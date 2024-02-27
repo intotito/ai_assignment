@@ -13,28 +13,35 @@ public class PilotModel extends TestPlatform{
 		
 	}
 	
+
+	
 	public PilotModel train(String fileName) throws Exception {
 		long time = System.currentTimeMillis();
 		out.println("Network Training Started ... ");
 		network = NetworkBuilderFactory.getInstance().newNetworkBuilder()
-				.inputLayer("Input", 80)
-				.hiddenLayer("Hidden1", Activation.TANH, 24)
+				.inputLayer("Input", 21)
+		//		.hiddenLayer("Hidden1", Activation.TANH, 24)
 		//		.hiddenLayer("Hidden2", Activation.TANH, 10)
-				.hiddenLayer("Hidden3", Activation.TANH, 20)
-				.outputLayer("Output", Activation.TANH, 3)
-				.train(trainX, trainExpected, 0.01, 0.95, 500, 0.00001, Loss.SSE)
+				.hiddenLayer("Hidden3", Activation.RELU, 12)
+				.outputLayer("Output", Activation.RELU, 3)
+				.train(trainX, trainExpected, 0.001, 0.95, 700, 0.001, Loss.CEE)
 				.save("./" + fileName).build();
 		out.print("Model Finished Training in " + (System.currentTimeMillis() - time) / 1000 + " Seconds\n");
 
 		return this;
 	}
 	
+	public void trainBatch() {
+		
+	}
+	
 	public static void main(String[] arg) throws Exception{
-		new PilotModel(3143)
-		.loadData("./new_test.csv", 80, 3, 0.2	)
-//		.train("./pilot_best_tune8")
-		.loadModel("./pilot_tan_tan ")
-//		.testTrain(false)
-		.testTest(true);
+		new PilotModel(313)
+		.loadData("./train_data_3_by_7_1.00.csv", 21, 3, 1)
+//		.train("./model_3_by_7_1.03")
+		.loadModel("./model_3_by_7_1.02")
+//		.testTrain(true);
+//		.testTest(true)
+		.crossValidate(5, 3232);
 	}
 }
