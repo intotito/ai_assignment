@@ -65,7 +65,7 @@ public class Stats {
 	}
 
 	@Classification(message = "Confusion Matrix")
-	public double getConfusionMatrix(double[][] expected, double[][] prediction) {
+	public double getAccuracy(double[][] expected, double[][] prediction) {
 		int classes = expected[0].length;
 		int[][] matrix = new int[classes][classes];
 		for (int i = 0; i < expected.length; i++) {
@@ -204,7 +204,6 @@ public class Stats {
 				String message = (String) mMethod.invoke(myAnn);
 				double result = (double)method.invoke(this, expected, prediction);
 				values.put(message, result);
-//				System.out.printf("%s:\t%.4f\n", message, result);
 			}
 		}
 		for(var kv : values.entrySet()) {

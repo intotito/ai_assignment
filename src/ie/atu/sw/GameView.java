@@ -74,7 +74,7 @@ public class GameView extends JPanel implements ActionListener{
 		setBackground(Color.LIGHT_GRAY);
 		setDoubleBuffered(true);
 //		spy = new Spy(MODEL_WIDTH, MODEL_HEIGHT);
-		agent = new NeuralNetworkAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
+		agent = new ProgrammedAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
 		//Creates a viewing area of 900 x 600 pixels
 		dim = new Dimension(MODEL_WIDTH * SCALING_FACTOR, MODEL_HEIGHT * SCALING_FACTOR);
     	super.setPreferredSize(dim);
@@ -145,9 +145,9 @@ public class GameView extends JPanel implements ActionListener{
          */
         g2.setFont(font);
         g2.setColor(Color.RED);
-        g2.fillRect(1 * SCALING_FACTOR, 15 * SCALING_FACTOR, 400, 3 * SCALING_FACTOR);
+        g2.fillRect(1 * SCALING_FACTOR, 0 * 15 * SCALING_FACTOR, 400, 3 * SCALING_FACTOR);
         g2.setColor(Color.WHITE);
-        g2.drawString("Time: " + (int)(time * (TIMER_INTERVAL/1000.0d)) + "s", 1 * SCALING_FACTOR + 10, (15 * SCALING_FACTOR) + (2 * SCALING_FACTOR));
+        g2.drawString("Time: " + (int)(time * (TIMER_INTERVAL/1000.0d)) + "s", 1 * SCALING_FACTOR + 10, 0 * (15 * SCALING_FACTOR) + (2 * SCALING_FACTOR));
         
         if (!timer.isRunning()) {
 			g2.setFont(over);

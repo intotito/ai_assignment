@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,21 +15,32 @@ public class ProgrammedAgent extends Agent implements Trainer{
 	private boolean recording = false;
 	private BufferedWriter writer;
 	private String fileName;
-	double[] weights;
+	private double[] weights;
+	private ExecutorService executor;
 
 	public ProgrammedAgent(int STAGE_WIDTH, int STAGE_HEIGHT, int PLAYER_COLUMN, int horizon) {
 		super(STAGE_WIDTH, STAGE_HEIGHT, PLAYER_COLUMN, horizon);
-		fileName = String.format("train_data_%d_by_%d_%.2f", horizon, height, version);
+		fileName = String.format("trainXXX_data_%d_by_%d_%.2f", horizon, height, version);
 		double[] arr = IntStream.range(0,  width).mapToDouble(i -> width - i + 1).toArray();
-		weights = softMax(arr);//{0.70, 0.20, 0.10, 0.05};
+		weights = softMax(arr);
 	}
 	
+	private void write(String data) {
+		executor.execute( () -> {
+			try {
+				writer.append(data);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+	}
 	
 	@Override
 	public void startRecording() {
 		if (recording)
 			return;
 		try {
+			executor = Executors.newFixedThreadPool(4);
 			File file = new File(String.format("%s%s%s", "./", fileName, ".csv"));
 			StringBuffer ss = new StringBuffer();
 			if (!file.exists()) {
@@ -38,9 +51,8 @@ public class ProgrammedAgent extends Agent implements Trainer{
 				ss.append("\n");
 			}
 			writer = new BufferedWriter(new FileWriter(file, true));
-			writer.append(ss.toString());
+			write(ss.toString());
 			recording = true;
-			System.out.println(ss.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -52,6 +64,7 @@ public class ProgrammedAgent extends Agent implements Trainer{
 		if (!recording)
 			return;
 		try {
+			executor.shutdown();
 			writer.close();
 			recording = false;
 			System.out.println("Stop Recording...");
@@ -62,14 +75,13 @@ public class ProgrammedAgent extends Agent implements Trainer{
 
 	@Override
 	public void record(double[] sample) {
-		try {
-			writer.append(IntStream.range(0, sample.length).mapToObj(i -> String.format("%.2f", sample[i]))
-					.collect(Collectors.joining(",")));
-			writer.append("\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		StringBuffer sb = new StringBuffer();
+		sb.append(IntStream.range(0, sample.length).mapToObj(i -> String.format("%.2f", sample[i]))
+				.collect(Collectors.joining(",")));
+		sb.append("\n");
+		write(sb.toString());
 	}
+	
 	public double[] softMax(double[] vector) {
 		double sum = IntStream.range(0, vector.length).mapToDouble(i -> Math.exp(vector[i])).sum();
 		return IntStream.range(0,  vector.length).mapToDouble(i -> Math.exp(vector[i]) / sum).toArray();

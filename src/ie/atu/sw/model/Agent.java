@@ -17,7 +17,7 @@ public abstract class Agent implements AutoPilot{
 	}
 
 	public double[] extractSample(int player_row) {
-		double[] value = new double[(width + 0) * height];
+		double[] value = new double[width * height];
 		int indexTop = player_row - width;
 		if(STAGE_HEIGHT - player_row - 1 < width) {
 			indexTop = STAGE_HEIGHT - height;

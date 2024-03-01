@@ -37,7 +37,7 @@ public class PilotModel extends TestPlatform{
 	
 	public static void main(String[] arg) throws Exception{
 		new PilotModel(313)
-		.loadData("./train_data_3_by_7_1.00.csv", 21, 3, 1)
+		.loadData("./trainXXX_data_3_by_7_1.00.csv", 21, 3, 1)
 //		.train("./model_3_by_7_1.03")
 		.loadModel("./model_3_by_7_1.02")
 //		.testTrain(true);
