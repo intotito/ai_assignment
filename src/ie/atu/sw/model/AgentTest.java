@@ -11,7 +11,7 @@ public class AgentTest {
 	
 	@Before
 	public void beforeTest() {
-//		agent = new Agent(30, 20, 15, 3);
+		agent = new FuzzyAgent(30, 20, 15, 3);
 	}
 	
 	
@@ -42,13 +42,22 @@ public class AgentTest {
 
 	@Test
 	public void testPredict() {
-		double[] aa = {		0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	1,	1,	0,	0,	0,	
-				0,	0,	0,	0,  0,	0,	0,	0,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
-				1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	1,	1,	1,	1,	1
+		double[] aa = {		
+				0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
+				1,	1,	1,	0,	0,	0,  0,	0,	0,	0,  0,	0,	0,	0,	1,	1,	1,	1,	1,	1,	
+				1,	1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,  1,	1,	1,	1,	1,	1,	1,	
+				1,	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	1,	1,	1,	1,	1
 		};
 		
-	//	agent.decipher(aa, 4, 7);
-		fail("Not yet implemented");
+		double[] aaa = {		
+				1, 1, 1, 0, 0, 1, 1, 
+				1, 1, 0, 0, 0, 1, 1, 
+				1, 1, 0, 0, 1, 1, 1
+		};
+		
+		agent.decipher(aaa, 3, 7);
+		agent.predict(3);
+	//	fail("Not yet implemented");
 	}
 
 }

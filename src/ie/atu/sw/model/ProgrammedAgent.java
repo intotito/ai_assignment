@@ -122,11 +122,4 @@ public class ProgrammedAgent extends Agent implements Trainer{
 	}
 	
 	
-	public void decipher(double[] sample, int cols, int height) {
-		for (int i = 0; i < cols * height; i++) {
-			int y = (height * i) - (i / cols) * (cols * height - 1);
-			System.out.printf("%d%c", (int) sample[y], (((i + 1) % (cols) != 0) || i == 0 && cols != 1) ? ',' : '\n');
-		}
-		System.out.println("-----------------------------------------------------------");
-	}
 }

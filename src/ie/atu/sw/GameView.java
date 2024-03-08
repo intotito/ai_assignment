@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import ie.atu.sw.model.Agent;
+import ie.atu.sw.model.FuzzyAgent;
 import ie.atu.sw.model.NeuralNetworkAgent;
 import ie.atu.sw.model.ProgrammedAgent;
 import ie.atu.sw.model.Trainer;
@@ -74,7 +75,7 @@ public class GameView extends JPanel implements ActionListener{
 		setBackground(Color.LIGHT_GRAY);
 		setDoubleBuffered(true);
 //		spy = new Spy(MODEL_WIDTH, MODEL_HEIGHT);
-		agent = new ProgrammedAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
+		agent = new FuzzyAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
 		//Creates a viewing area of 900 x 600 pixels
 		dim = new Dimension(MODEL_WIDTH * SCALING_FACTOR, MODEL_HEIGHT * SCALING_FACTOR);
     	super.setPreferredSize(dim);
