@@ -21,13 +21,13 @@ public class FuzzyAgent extends Agent {
 			e.printStackTrace();
 		}
 		fb = fis.getFunctionBlock("Pilot");
-		
+		JFuzzyChart.get().chart(fb);
 
 	}
 	
-//	public static void main(String[] aa) {
-//		var fzzy = new FuzzyAgent(30, 20, 15, 3);
-//	}
+	public static void main(String[] aa) {
+		var fzzy = new FuzzyAgent(30, 20, 15, 3);
+	}
 	
 
 	@Override
@@ -36,7 +36,7 @@ public class FuzzyAgent extends Agent {
 		double[] sample = extractSample(player_row);
 		decipher(sample, 3, 7);
 		int datum = 3;
-		double[] softMax = {0.665, 0.245, 0.09};
+		double[] softMax = {0.715, 0.195, 0.09};
 		double[] tBag = new double[width + 1];
 		double[] bBag = new double[width + 1];
 		tBag[0] = 0;
@@ -78,10 +78,10 @@ public class FuzzyAgent extends Agent {
 		fb.setVariable("bottom_vec", bottom_vec);
 		fb.evaluate();
 		Variable tip = fb.getVariable("direction");
-		int ans = (int)Math.round(tip.defuzzify());
+		double ans = Math.round(tip.defuzzify());
 		System.out.println("Evaluation: " + ans);
 		
-		return ans;
+		return (int)ans;
 	}
 
 }

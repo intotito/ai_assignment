@@ -17,9 +17,29 @@ The goal of this project is to train a neural network to navigate through an end
 
  **Sampling**: data samples are in the form of a flattened row major 2D array of length $rows \times cols = 600$. Values of `0` represent empty space while `1` represent an obstacle or edge in the screen.
 
- ### Strategy
+ ## Strategy
 
- #### Sampling
+ The following three step strategies were adopted to tackle the problem. 
+ - Create a Programmed Agent that can navigate the tunnel perfectly. 
+ - Generate training data using the Programmed Agent
+ - Train a Neural Network Agent using the data. 
+
+ ## Programmed Agent
+
+ This component implements an algorithm that can navigate through the cave. It works on the basis of navigating the ship towards the weighted center of the cave opening. A softmax value of the horizon is used as the weight, i.e. for a horizon of say $n$, then the softmax of $[1, 2, ..., n]$ is used as the weight.
+
+ ### *Agent*
+
+ This is the base class of all specialized agents and implements all the preprocessing functionality. 
+
+ #### Preprocessing
+
+ - **Sampling Data**: All columns after the ship position is sampled and saved in a buffer. This method may return without performing any operation depending on the state of the agent. 
+ - **Extracting Data**: Involves extracting only relevant data from the buffer with respect to the ship position and the pointer to the buffer. The buffer will be consumed until the pointer gets to the end of the buffer which will change the state of the agent to request sampling. 
+ - **Looking**: This represents the state of the agent at any given time. If the buffer has been completely consumed then the next request to *sample* will be executed after which the state will be updated. 
+
+
+ ### Sampling
  Presenting the data in a form that can be visualized easily for analysis i.e. printing the sampled data to the screen. This is necessary to for debugging and easy detection of pattern. Since the sample data is generated as a flattened row-major matrix, printing the sample in a column-major matrix presents the sample as it is shown on the screen.
 
 

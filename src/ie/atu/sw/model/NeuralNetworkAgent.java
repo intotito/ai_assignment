@@ -9,7 +9,8 @@ public class NeuralNetworkAgent extends Agent{
 	public NeuralNetworkAgent(int STAGE_WIDTH, int STAGE_HEIGHT, int PLAYER_COLUMN, int horizon) {
 		super(STAGE_WIDTH, STAGE_HEIGHT, PLAYER_COLUMN, horizon);
 		try {
-			network = Aicme4jUtils.load("./model_3_by_7_1.02");
+			network = Aicme4jUtils.load("./resources/gridSearch/Signet7.ann");
+			System.out.println(network.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -20,7 +21,7 @@ public class NeuralNetworkAgent extends Agent{
 		int answer = 0;
 		try {
 			answer = (int) network.process(extractSample(player_row), Output.LABEL_INDEX);
-			System.out.println("Awumen OOOOO");
+//			System.out.println("Awumen OOOOO");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

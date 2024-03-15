@@ -34,6 +34,7 @@ RULEBLOCK No1
  RULE 1 : IF top_vec IS low AND bottom_vec IS low THEN direction IS down;
  RULE 2 : IF bottom_vec IS high AND top_vec IS high THEN direction IS up;
  RULE 3 : IF bottom_vec IS low AND top_vec IS high THEN direction IS still;
+ RULE 4 : IF top_vec IS low AND bottom_vec IS high THEN direction IS still;
 END_RULEBLOCK
 
 END_FUNCTION_BLOCK

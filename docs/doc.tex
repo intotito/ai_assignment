@@ -1,0 +1,178 @@
+%% by Michael Shell
+%% Edited by Dominic Carr
+%%
+%% This work is distributed under the LaTeX Project Public License (LPPL)
+%% ( http://www.latex-project.org/ ) version 1.3, and may be freely used,
+%% distributed and modified. A copy of the LPPL, version 1.3, is included
+%% in the base LaTeX documentation of all distributions of LaTeX released
+%% 2003/12/01 or later.
+%% Retain all contribution notices and credits.
+
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\usepackage{lipsum} 
+\usepackage{hyperref}
+\usepackage{biblatex}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath, xparse}
+
+\graphicspath{{./../images/}}
+
+\addbibresource{test.bib}
+
+\begin{document}
+% paper title
+% Titles are generally capitalized except for words such as a, an, and, as,
+% at, but, by, for, in, nor, of, on, or, the, to and up, which are usually
+% not capitalized unless they are the first or last word of the title.
+% Linebreaks \\ can be used within to get better formatting as desired.
+% Do not put math or special symbols in the title.
+\title{Teaching a Neural Network to Fly Autopilot}
+
+% author name
+\author{Otito~Mbelu (G00397738)% <-this % stops a space
+}
+
+% The paper headers
+\markboth{Atlantic Technological University - Artificial Intelligence Assignment}%
+{}
+
+\IEEEtitleabstractindextext{
+    \begin{abstract}
+        The goal of this project is to train a Automatic Neural Network to navigate through 
+        an endless horizontally scrolling tunnel without clipping any of the edges. A programmed agent 
+        capable of consistently navigating the tunnel accurately was designed and implemented, and was
+        further used as a trainer to generate training data for the Neural Network. Model selection 
+        was done using a brute force approach that calls for a grid search using varying ranges of 
+        hyper parameters to select an optimum model. Metrics for model evaluation was based on 
+        F1-Accuracy score and Mean Cross-Entropy Loss through cross-validation of training data.
+        A network configuration of 21-15-3 with Inverse Square Root Linear Unit Activation Function 
+        (ISRLU) with a test accuracy score of 100\% and MCE loss of 0.1837 was selected as the best 
+        model. Furthermore, an autopilot agent utilizing Fuzzy Logic was implemented to solve the 
+        problem and also performed flawlessly. 
+
+    \end{abstract}
+}
+
+% make the title area
+\maketitle
+
+\section{Introduction}
+\label{sec:introduction}
+
+\IEEEPARstart{T}{}he game consists
+of a 30 $\times$ 20 grid where the ship is at a constant column and can navigate vertically i.e. up and 
+down. A programmed agent capable of flawlessly navigating the tunnel in a consistent manner was designed
+to be the basis of training data generation. The agent's navigation algorithm was designed in the basis 
+of navigating the ship through the middle of the weighted opening in the next $n$ columns with respect to 
+the ship current location. This implies that the next movement of the ship will attempt to get closer to 
+the weighted center of the next $n$ columns. A look forward horizon of $3$ was chosen as the value for $n$.
+After trials with the ranges $2 \to 5, 3$ was selected because it performs the smoothest navigation through
+the tunnel amongst the values trialed. This resulted in a grid of $n \times (2n + 1)$ i.e. $3 \times 7 = 21$ 
+input features. The following sections describes the design and model selection strategy used to implement
+the various agents. 
+
+\section{Agent Design}
+All the AutoPilot agents implements the base abstract class Agent, which provides all the functionality for 
+sampling and preprocessing data. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{uml.png}
+    \caption{UML Diagram}
+    \label{fig:uml}
+\end{figure}
+
+\subsection{Programmed Agent}
+
+The behavior of this agent was implemented on the $ProgrammedAgent$ class. To predict which step to take the
+weighted center of the opening of the cave is evaluated using a softmax function as weight. $W = \sigma(N)$,
+where $\sigma$ is the softmax function and $W$ is weight, $W = \{w_1, w_2, ..., w_n\}$ and $N = \{1, 2, ..., 
+n\}$. The weighted center is evaluated by taking the mean of the sum of the dot product of the weight and 
+the center of each column. $y = \frac{1}{n}\sum\limits_{i=1}^{n}W_i \times \frac{h_i}{2} = \frac{1}{2n}
+(W \cdot H)$ where $h_i$ is the height of the cave's opening for column $i$ and $H$ is the set of heights. 
+The final prediction is determined by the value of $y$ with 
+respect to the ships current row. The ship will navigate UP if $y > player\_row$ and DOWN if $y 
+< player\_row$ and will STAY put if $y = player\_row$
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{stage.png}
+    \caption{Stage}
+    \label{fig:stage}
+\end{figure}
+
+\section{Sampling}
+\subsubsection*{Buffering}
+Data sampling strategy involves storing the entire grid beyond the ship's location (column) in a buffer and 
+continuously consume the buffer until it runs out. The buffer will be refilled as soon as the buffer is 
+exhausted. A pointer which points to the current position in the buffer was used to track the position of 
+the buffer. The size of the buffer is given by $b_w \times b_h$, where $b_h$ is the height of the stage and 
+$b_w$ starts from column next to the ship to the very end of the stage on the horizontal axis. 
+This is demonstrated in Fig. \ref{fig:sampling}. This implies that new data is sampled every
+$b_w - n$ frames, where $b_w$ is the width of the buffer and $n$ is the horizon. 
+\subsubsection*{Feature Extraction} 
+At any given frame the agent will have to extract the relevant features from the buffer which is the next $n$
+columns beyond the ship (see Fig.\ref{fig:sampling}) with a height of $2n + 1$. The relevant features is given
+as $F = \bigcup\limits_{i=1}^{n}F_i$, where $F_i$ is the $i$th column of the relevant features and the union 
+operation represents arraycopy. $F_i = \bigcup\limits_{j = p(b_h) + r - n}^{2n + 1} B_j$, where $p$ = pointer,
+ $r$ is player row, $b_h$ is the height of the buffer and $B_j$ is the $j$th column of the 
+buffer $B$. Data extraction runs at a big O of $O(|F|)$ where $|F|=n \times (2n+1)$, assuming that arraycopy
+is done at $O(1)$.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{sampling.png}
+    \caption{Sampling}
+    \label{fig:sampling}
+\end{figure}
+
+\section{Feature Design}
+
+The value 3 was chosen for $n$ i.e. the horizon which resulted in 21 input features for the Neural Network. 
+A classification model was chosen as three different output is expected, thus the output of the Neural 
+Network consists of 3 nodes.
+Considering the nature of the problem a maximum of 2 hidden layers was considered enough to generalize. 
+The selected features does not curiously involve the position of the ship. This was trialed with a One-hot-
+encoding of the ship position. The values however, never changed through 430 rows of training data, 
+suggesting no contribution to the model. 
+
+\section{Model Selection}
+A grid search algorithm taking different values for $\alpha, \beta$, epochs, activation functions, loss 
+functions, training speed, number of nodes per layer, number of hidden layers was implemented and used
+to search for the best model. Appendix \ref{app:models} shows a summary of different models selected and their 
+respective performances. 
+
+\subsubsection*{Metrics}
+Cross validation of 5 fold was used for model evaluation, and final performance recorded with unseen test
+data. F1-Accuracy was used as the first benchmark for model selection while the cross entropy loss was 
+used as a tie breaker for models with similar F1-Accuracy scores. 
+
+\subsubsection*{Best Model}
+fs
+
+\section{Extra - FuzzyAgent}
+This agent was implemented using a Fuzzy Inference System. The input variable to FIS is given by $\phi$ 
+and $\psi$. The universe of discourse is given by the  $\Phi$ and $\Psi$ which both have ranges of
+$-90^{\circ} \to 90^{\circ}$. $\phi \in \Phi$, represents the angle of inclination of the ship with respect to the top clip of the cave
+opening, while $\psi \in \Psi,$ represents the angle of declination of the ship with respect to the bottom clip
+of the cave opening. $\Phi$ and $\Psi$ were evaluated as the weighted average of the angles between
+the ship and the cave's top and bottom edges of the opening along its horizon respectively. $\phi = W \cdot \vec{\phi}, 
+\psi = W \cdot \vec{\psi}$, where $\phi = \{\phi_1, \phi_2, ..., \phi_n\}, \psi = \{\psi_1, \psi_2, ..., 
+\psi_n\}$ and $\phi_i = tan^{-1} \left(  \frac{y_{t_i}}{x_{t_i}}\right)$ and $\psi_i= tan^{-1} \left(  
+\frac{y_{b_i}}{x_{b_i}}\right)$.
+\subsubsection{Membership Function} 
+The Membership functions are given by $high$ and $low$ which defines the degree of
+membership for the input parameters along the universe of discourse. 
+\subsubsection*{Linguistic Variables} 
+\appendices
+
+\section{Top Grid Search Results}\label{app:models}
+\include{appendix.tex}
+
+
+\end{document}

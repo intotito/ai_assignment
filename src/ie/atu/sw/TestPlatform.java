@@ -28,20 +28,25 @@ import jhealy.aicme4j.net.Output;
 public abstract class TestPlatform {
 	protected NeuralNetwork network;
 	protected double[][] trainX, trainExpected;
-	double[][] testX, testExpected;
+	protected double[][] testX, testExpected;
 	protected int seed;
 
 	public abstract TestPlatform train(String fileName) throws Exception;
 	
-	public void crossValidate(int k, int seed) throws  Exception {
+	public double[][] crossValidate(int k, int seed, boolean verbose) throws Exception {
+		return crossValidate(trainX, trainExpected, k, seed, network, verbose);
+	}
+	
+	public double[][] crossValidate(double[][] X, double[][] y, int k, int seed, NeuralNetwork ann, boolean verbose) throws  Exception {
 		Stats stats = new Stats();
 		Random random = new Random(seed);
-		Integer[] indices = IntStream.range(0,  trainX.length).boxed().toArray(Integer[]::new);
+		Integer[] indices = IntStream.range(0,  X.length).boxed().toArray(Integer[]::new);
 		List<Integer> in = Arrays.asList(indices);
 		Collections.shuffle(in, random);
 		indices = in.stream().mapToInt(Integer::intValue).boxed().toArray(Integer[]::new);
-		System.out.println("Length: indices-> " + indices.length + " train data -> " + trainX.length + " Count -> " + indices.length / k);
-		System.out.println(Arrays.toString(indices));
+//		System.out.println("Length: indices-> " + indices.length + " train data -> " + X.length + " Count -> " + indices.length / k);
+//		System.out.println(Arrays.toString(indices));
+		double[][] scores = new double[k][2];
 		for(int i = 0; i < k; i++) {
 			int count = indices.length / k;
 			double[][] trainXIJ = new double[count * (k - 1)][];
@@ -51,19 +56,30 @@ public abstract class TestPlatform {
 			double[][] validExpectedIJ = new double[count][];
 			for(int j = 0, vC = 0, tC = 0; j < (indices.length / k) * k; j++) {
 				if(j >= i * count && j < (i + 1) * count) {
-					validXIJ[vC] = trainX[indices[j]];
-					validExpectedIJ[vC] = trainExpected[indices[j]];
+					validXIJ[vC] = X[indices[j]];
+					validExpectedIJ[vC] = y[indices[j]];
 					vC++;
 				} else {
-					trainXIJ[tC] = trainX[indices[j]];
-					trainExpectedIJ[tC] = trainExpected[indices[j]];
+					trainXIJ[tC] = X[indices[j]];
+					trainExpectedIJ[tC] = y[indices[j]];
 					tC++;
 				}
 			}
-			stats.scoreModel(validExpectedIJ, getResultSoftMax(validXIJ, network), ModelType.CLASSIFICATION);
-			System.out.println("K-Fold i: " + i + " ===============================================================================\n\n");
-
+			int[][] matrix = stats.getConfusionMatrix(validExpectedIJ, getResult(validXIJ, ann));
+			double accuracy = stats.getAccuracy(matrix);
+			scores[i] = new double[]{accuracy, stats.getMCCE(validExpectedIJ, getResultSoftMax(validXIJ, ann), false)};
+		//	System.out.print("(" + scores[i][0] + ", " + scores[i][1] + ")\t");
+			//stats.scoreModel(validExpectedIJ, getResultSoftMax(validXIJ, ann), ModelType.CLASSIFICATION, verbose);
+			if(verbose) {
+				String[] a = {"Up", "Cruise", "Down"};
+				stats.printConfusionMatrix(matrix, a);
+				stats.printF1Scores(stats.getF1Scores(matrix), a);
+				stats.printAccuracyReport(stats.getF1Scores(matrix));
+				System.out.println();
+			}
+			
 		}
+		return scores;
 	}
 
 	protected double[][][] splitData(double[][] data, double fraction, int seed) {
@@ -97,19 +113,20 @@ public abstract class TestPlatform {
 //		 testPrediction(testX, testExpected, network, verbose);
 //		score(testX, testExpected, network, verbose);
 		Stats stats = new Stats();
-		stats.scoreModel(testExpected, getResultSoftMax(testX, network), ModelType.CLASSIFICATION);
+		stats.scoreModel(testExpected, getResultSoftMax(testX, network), ModelType.CLASSIFICATION, verbose);
 		return this;
 	}
 	
-	public void score(double[][] testDataX, double[][] expected, NeuralNetwork network , boolean verbose) throws Exception {
-		double[][] prediction = getResult(testDataX, network);
+//	public void score(double[][] testDataX, double[][] expected, NeuralNetwork network , boolean verbose) throws Exception {
+//		double[][] prediction = getResult(testDataX, network);
 //		System.out.println(Arrays.stream(expected).map(Arrays::toString).collect(Collectors.joining("\n")));
 //		System.out.println(Arrays.stream(prediction).map(Arrays::toString).collect(Collectors.joining("\n")));
 //		Stats stats = new Stats();
 //		int[][] matrix = stats.getConfusionMatrix(expected, prediction);
-	}
+//	}
 	public TestPlatform loadModel(String fileName) throws Exception {
 		network = Aicme4jUtils.load("./" + fileName);
+		System.out.println(network.toString());
 		return this;
 	}
 

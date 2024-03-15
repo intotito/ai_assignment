@@ -72,7 +72,7 @@ public class StatsTest {
 	@Test
 	public void testGetRSquared() {
 		double expected = 0.9706;
-		double r2 = stats.getRSquared(y, y_);
+		double r2 = stats.getRSquared(y, y_, false);
 		System.out.println("R2: " + expected);
 		assertEquals(expected, r2, 0.001);
 	}
@@ -80,7 +80,7 @@ public class StatsTest {
 	@Test
 	public void testGetARSquared() {
 		double expectedR2 = 0.96850;
-		double answer = stats.getARSquared(y, y_);
+		double answer = stats.getARSquared(y, y_, false);
 		System.out.println("Adjusted R2: " + answer);
 		assertEquals(expectedR2, answer, 0.001);
 	}
@@ -104,7 +104,7 @@ public class StatsTest {
 	@Test
 	public void testScoreModel() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		System.out.println("- Score: ------------------------------------------------------------");
-		stats.scoreModel(y_, y, ModelType.REGRESSION);
+		stats.scoreModel(y_, y, ModelType.REGRESSION, false);
 		System.out.println("----------------------------------------------------------------------");
 	}
 	
@@ -122,7 +122,7 @@ public class StatsTest {
 		double[][] trueValue = {{0, 1, 0, 0}};
 		double[][] predValue = {{0.05, 0.85, 0.10, 0.0}};
 		double expected = 0.16251892949777494;
-		double crossE = stats.getMCCE(trueValue, predValue);
+		double crossE = stats.getMCCE(trueValue, predValue, false);
 		assertEquals(expected, crossE, 0.001);
 		
 	}

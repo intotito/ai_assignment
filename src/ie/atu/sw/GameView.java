@@ -33,8 +33,8 @@ public class GameView extends JPanel implements ActionListener{
 	
 	private static final int MIN_TOP 			= 2;
 	private static final int MIN_BOTTOM 		= 18;
-	private static final int PLAYER_COLUMN 		= 15;
-	private static final int TIMER_INTERVAL 	= 200;
+	private static final int PLAYER_COLUMN 		= 10;
+	private static final int TIMER_INTERVAL 	= 50;
 	
 	private static final byte ONE_SET 			=  1;
 	private static final byte ZERO_SET 			=  0;
