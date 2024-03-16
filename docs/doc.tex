@@ -79,12 +79,6 @@ the various agents.
 All the AutoPilot agents implements the base abstract class Agent, which provides all the functionality for 
 sampling and preprocessing data. 
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{uml.png}
-    \caption{UML Diagram}
-    \label{fig:uml}
-\end{figure}
 
 \subsection{Programmed Agent}
 
@@ -156,19 +150,33 @@ used as a tie breaker for models with similar F1-Accuracy scores.
 fs
 
 \section{Extra - FuzzyAgent}
-This agent was implemented using a Fuzzy Inference System. The input variable to FIS is given by $\phi$ 
-and $\psi$. The universe of discourse is given by the  $\Phi$ and $\Psi$ which both have ranges of
+This agent was implemented using a Fuzzy Inference System (FIS). 
+\subsubsection*{Fuzzification}
+The input variable to FIS is given by $\phi$ and $\psi$. The universe of discourse is given by the  
+$\Phi$ and $\Psi$ which both have ranges of
 $-90^{\circ} \to 90^{\circ}$. $\phi \in \Phi$, represents the angle of inclination of the ship with respect to the top clip of the cave
 opening, while $\psi \in \Psi,$ represents the angle of declination of the ship with respect to the bottom clip
-of the cave opening. $\Phi$ and $\Psi$ were evaluated as the weighted average of the angles between
+of the cave opening. $\phi$ and $\psi$ were evaluated as the weighted average of the angles between
 the ship and the cave's top and bottom edges of the opening along its horizon respectively. $\phi = W \cdot \vec{\phi}, 
 \psi = W \cdot \vec{\psi}$, where $\phi = \{\phi_1, \phi_2, ..., \phi_n\}, \psi = \{\psi_1, \psi_2, ..., 
 \psi_n\}$ and $\phi_i = tan^{-1} \left(  \frac{y_{t_i}}{x_{t_i}}\right)$ and $\psi_i= tan^{-1} \left(  
-\frac{y_{b_i}}{x_{b_i}}\right)$.
-\subsubsection{Membership Function} 
-The Membership functions are given by $high$ and $low$ which defines the degree of
-membership for the input parameters along the universe of discourse. 
-\subsubsection*{Linguistic Variables} 
+\frac{y_{b_i}}{x_{b_i}}\right)$. 
+The output of the FIS $f(\phi, \psi)$ were evaluated using the Center Of Gravity (COG) defuzzification 
+technique.
+\subsubsection*{Membership Function} 
+The Membership functions for the input variables were defined by the Linguistic variables $high$ and $low$, and maps $\phi$ and $\psi$ to 
+$\mu_{\Phi}$ and $\mu_{\Psi}$ respectively. The output $f(\phi, \psi)$ was defined using the linguistic variable
+$up$, $down$, and $still$ (See Fig.\ref{fig:fuzzy})
+
+\subsubsection*{Rules}
+The rules for FIS were defined as follows: 
+$\footnotesize{\texttt{1 : IF $\phi$ IS low AND $\psi$ IS low THEN output IS down;}}$
+$\footnotesize{\texttt{2 : IF $\psi$ IS high AND $\phi$ IS high THEN output IS up;}}$
+$\footnotesize{\texttt{3 : IF $\psi$ IS low AND $\phi$ IS high THEN output IS still;}}$
+$\footnotesize{\texttt{4 : IF $\phi$ IS low AND $\psi$ IS high THEN output IS still;}}$
+
+\section{Conclusion}
+
 \appendices
 
 \section{Top Grid Search Results}\label{app:models}
