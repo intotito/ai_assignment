@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,15 +20,29 @@ import java.util.stream.Stream;
 
 import ie.atu.sw.stat.ModelType;
 import ie.atu.sw.stat.Stats;
+import jhealy.aicme4j.NetworkBuilderFactory;
+import jhealy.aicme4j.net.Activation;
 import jhealy.aicme4j.net.Aicme4jUtils;
+import jhealy.aicme4j.net.Loss;
 import jhealy.aicme4j.net.NeuralNetwork;
 import jhealy.aicme4j.net.Output;
-
+/**
+ * This class provides various methods for model evaluation
+ */
 public abstract class TestPlatform {
+	
+	protected record ModelInfo(String networkInfo, long time, double[][] scores) implements Comparable<ModelInfo> {
+		public int compareTo(ModelInfo a) {
+			Stats stats = new Stats();
+			return (int) (stats.getMean(a.scores(), 0) - stats.getMean(scores(), 0));
+		}
+	}
+	
 	protected NeuralNetwork network;
 	protected double[][] trainX, trainExpected;
 	protected double[][] testX, testExpected;
 	protected int seed;
+	private String[] classNames;
 
 	public abstract TestPlatform train(String fileName) throws Exception;
 	
@@ -44,8 +57,6 @@ public abstract class TestPlatform {
 		List<Integer> in = Arrays.asList(indices);
 		Collections.shuffle(in, random);
 		indices = in.stream().mapToInt(Integer::intValue).boxed().toArray(Integer[]::new);
-//		System.out.println("Length: indices-> " + indices.length + " train data -> " + X.length + " Count -> " + indices.length / k);
-//		System.out.println(Arrays.toString(indices));
 		double[][] scores = new double[k][2];
 		for(int i = 0; i < k; i++) {
 			int count = indices.length / k;
@@ -67,13 +78,10 @@ public abstract class TestPlatform {
 			}
 			int[][] matrix = stats.getConfusionMatrix(validExpectedIJ, getResult(validXIJ, ann));
 			double accuracy = stats.getAccuracy(matrix);
-			scores[i] = new double[]{accuracy, stats.getMCCE(validExpectedIJ, getResultSoftMax(validXIJ, ann), false)};
-		//	System.out.print("(" + scores[i][0] + ", " + scores[i][1] + ")\t");
-			//stats.scoreModel(validExpectedIJ, getResultSoftMax(validXIJ, ann), ModelType.CLASSIFICATION, verbose);
+			scores[i] = new double[]{accuracy, stats.getMCCE(validExpectedIJ, getResultSoftMax(validXIJ, ann), classNames, false)};
 			if(verbose) {
-				String[] a = {"Up", "Cruise", "Down"};
-				stats.printConfusionMatrix(matrix, a);
-				stats.printF1Scores(stats.getF1Scores(matrix), a);
+				stats.printConfusionMatrix(matrix, classNames);
+				stats.printF1Scores(stats.getF1Scores(matrix), classNames);
 				stats.printAccuracyReport(stats.getF1Scores(matrix));
 				System.out.println();
 			}
@@ -82,7 +90,7 @@ public abstract class TestPlatform {
 		return scores;
 	}
 
-	protected double[][][] splitData(double[][] data, double fraction, int seed) {
+	private double[][][] splitData(double[][] data, double fraction, int seed) {
 		List<double[]> dataSet = new ArrayList<double[]>(Arrays.asList(data));
 		Random r = new Random(seed);
 		Collections.shuffle(dataSet, r);
@@ -93,8 +101,8 @@ public abstract class TestPlatform {
 		return new double[][][] { trainSet.toArray(double[][]::new), dataSet.toArray(double[][]::new) };
 	}
 
-	protected TestPlatform loadData(String fileName, int w1, int w2, double divRatio) throws IOException {
-		double[][][] data = splitData(getData(fileName, w1 + w2), divRatio, seed);
+	public TestPlatform loadData(String fileName, int w1, int w2, double divRatio) throws IOException {
+		double[][][] data = splitData(getData(fileName, w1, w2), divRatio, seed);
 		double[][][] trainData = sliceData(data[0], w1, w2);
 		double[][][] testData = sliceData(data[1], w1, w2);
 		trainX = trainData[0];
@@ -104,33 +112,19 @@ public abstract class TestPlatform {
 		return this;
 	}
 
-	protected TestPlatform testTrain(boolean verbose) throws Exception {
-		testPrediction(trainX, trainExpected, network, verbose);
+	public TestPlatform testModel(ModelType type, boolean verbose) throws Exception {
+		Stats stats = new Stats();
+		stats.scoreModel(testExpected, getResultSoftMax(testX, network), classNames, type, verbose);
 		return this;
 	}
 
-	protected TestPlatform testTest(boolean verbose) throws Exception {
-//		 testPrediction(testX, testExpected, network, verbose);
-//		score(testX, testExpected, network, verbose);
-		Stats stats = new Stats();
-		stats.scoreModel(testExpected, getResultSoftMax(testX, network), ModelType.CLASSIFICATION, verbose);
-		return this;
-	}
-	
-//	public void score(double[][] testDataX, double[][] expected, NeuralNetwork network , boolean verbose) throws Exception {
-//		double[][] prediction = getResult(testDataX, network);
-//		System.out.println(Arrays.stream(expected).map(Arrays::toString).collect(Collectors.joining("\n")));
-//		System.out.println(Arrays.stream(prediction).map(Arrays::toString).collect(Collectors.joining("\n")));
-//		Stats stats = new Stats();
-//		int[][] matrix = stats.getConfusionMatrix(expected, prediction);
-//	}
 	public TestPlatform loadModel(String fileName) throws Exception {
 		network = Aicme4jUtils.load("./" + fileName);
 		System.out.println(network.toString());
 		return this;
 	}
 
-	protected double[][][] sliceData(double[][] data, int w1, int w2) {
+	private double[][][] sliceData(double[][] data, int w1, int w2) {
 		double[][] trainX = new double[data.length][w1];
 		double[][] expectedY = new double[data.length][w2];
 		for (int i = 0; i < data.length; i++) {
@@ -139,35 +133,34 @@ public abstract class TestPlatform {
 		}
 		return new double[][][] { trainX, expectedY };
 	}
-	
-	public double[] softMax(double[] vector) {
-		double sum = IntStream.range(0, vector.length).mapToDouble(i -> Math.exp(vector[i])).sum();
-		return IntStream.range(0,  vector.length).mapToDouble(i -> Math.exp(vector[i]) / sum).toArray();
-	}
 
-	protected double[][] getData(String fileName, int width) throws IOException {
+	private double[][] getData(String fileName, int w1, int w2) throws IOException {
 		File file = new File("./" + fileName);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		double[][] dataset = new double[(int) reader.lines().count() - 1][15];
+		double[][] dataset = new double[(int) reader.lines().count() - 1][];
 		reader.close();
 		try (Stream<String> lines = new BufferedReader(new InputStreamReader(new FileInputStream(file))).lines()) {
-			int[] i = { 0 };
-			lines.skip(1).forEach(line -> {
+			int[] i = { -1 };
+			lines
+//			.skip(1)
+			.forEach(line -> {
 				String[] values = line.split("\\s*,\\s*");
-
-				double[] dd = Arrays.stream(values).map(Double::valueOf).mapToDouble(Double::doubleValue).toArray();// toArray(Double[]::new);
-				dataset[i[0]++] = dd;
-
+				if(i[0] == -1) {
+					classNames = Arrays.stream(values).skip(w1).toArray(String[]::new);
+					i[0]++;
+				} else {
+					double[] dd = Arrays.stream(values).map(Double::valueOf).mapToDouble(Double::doubleValue).toArray();// toArray(Double[]::new);
+					dataset[i[0]++] = dd;
+				}
 			});
 		}
 		return dataset;
 	}
 
-	public static void normalizeData(String[] columnNames, double[][] data, double[][] expected, String fileName)
+	public static void arrayToCSV(String[] columnNames, double[][] data, double[][] expected, String fileName)
 			throws IOException {
 		StringBuffer sb = new StringBuffer();
 		sb.append(Arrays.stream(columnNames).collect(Collectors.joining(",")) + "\n");
-//		sb.append("f1, f2, f3, f4, f5, f6, f7, cp, im, pp, imU, om, omL, imL, imS\n");
 		for (int i = 0; i < data.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
 				sb.append(data[i][j] + ", ");
@@ -184,61 +177,7 @@ public abstract class TestPlatform {
 		Files.write(path, strToBytes);
 	}
 
-	protected double getMSE(double[][] expected, double[][] prediction) {		
-		return getSSE(expected, prediction) / expected.length;
-	}
-	
-	protected double getRMSE(double[][] expected, double[][]prediction) {
-		return Math.sqrt(getMSE(expected, prediction));
-	}
-	
-	protected double getSSE(double[][] expected, double[][] prediction) {
-		return IntStream.range(0, expected.length).mapToDouble(i -> Math.pow(expected[i][0] - prediction[i][0], 2)).sum();
-	}
-	
-	protected double getSSR(double[][] expected, double[][] prediction) {
-		double mean = getMean(expected);
-		return IntStream.range(0,  prediction.length).mapToDouble(i -> Math.pow(prediction[i][0] - mean, 2)).sum();
-	}
-	
-	protected double getRSquared(double[][] expected, double[][] prediction) {
-		double ssr = getSSR(expected, prediction);
-		return ssr / (ssr + getSSE(expected, prediction));
-	}
-
-	protected double getXRMSE(double[] expected, double[] prediction) {
-		double mean = getMean(expected);
-		double sum = 0;
-		for (int i = 0; i < expected.length; i++) {
-			sum += Math.pow(prediction[i] - mean, 2);
-		}
-		double error = sum / expected.length;
-		return Math.sqrt(error);
-	}
-
-	protected double getSEE(double[] expected, double[] prediction) {
-		double sum = 0;
-		for (int i = 0; i < expected.length; i++) {
-			sum += Math.pow(prediction[i] - expected[i], 2);
-		}
-		double error = sum / (expected.length - 2);
-		return Math.sqrt(error);
-	}
-	
-	protected double getMean(double[][] values, int axis) {
-		return IntStream.range(0,  values.length).mapToDouble(i -> values[i][axis]).average().getAsDouble();
-	}
-	
-	protected double getMean(double[][] values) {
-		return getMean(values, 0);
-	}
-	
-
-	protected double getMean(double[] values) {
-		return Arrays.stream(values).average().getAsDouble();
-	}
-	
-	protected double[][] getResult(double[][] testDataX, NeuralNetwork network) throws Exception {
+	private double[][] getResult(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
 			network.process(testDataX[i], Output.LABEL_INDEX);
@@ -247,58 +186,71 @@ public abstract class TestPlatform {
 		}
 		return ret;
 	}
-	protected double[][] getResultSoftMax(double[][] testDataX, NeuralNetwork network) throws Exception {
+	
+	private double[][] getResultSoftMax(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
 			network.process(testDataX[i], Output.LABEL_INDEX);
-			double[] store = softMax(network.getOutputLayer());
+			double[] store = new Stats().softMax(network.getOutputLayer());
 			ret[i] = Arrays.copyOf(store, store.length);
 		}
 		return ret;
 	}
 
-	
-	protected void testPrediction(double[][] testDataX, double[][] testExpectedY, NeuralNetwork network, boolean verbose) throws Exception {
-		String line = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -";
-		if(verbose)
-		System.out.print("Feature\t\t|");
-		for(int i = 0; i < testDataX[0].length && verbose; i++) {
-			System.out.printf("\t%s%d", "F", i + 1);
-		}
-		System.out.println();
-		double sumAccuracy = 0;
-		double sseAccuracy = 0;
-		double passMark = 0;
-		for(int i = 0; i < testDataX.length; i++) {
-			if(verbose)
-			System.out.printf("Test Data\t|\t");
-			for(int j = 0; j < testDataX[i].length && verbose; j++) {
-				System.out.printf("%.3f,\t", testDataX[i][j]);
-			}
-			if(verbose)
-			System.out.printf("\nExpected\t|\t");
-			for(int k = 0; k < testExpectedY[i].length && verbose; k++) {
-				System.out.printf("%.3f,\t", testExpectedY[i][k]);
-			}
-			int predIndex = (int)network.process(testDataX[i], Output.LABEL_INDEX);
-			double[] pred = network.getOutputLayer();
-			if(verbose)
-			System.out.printf("\nPredicted\t|\t");
-			for(int z = 0; z < pred.length && verbose; z++) {
-				System.out.printf("%.3f,\t", pred[z]);
-			}
-//			double accuracy = (1 - getMSE(testExpectedY[i], pred)) * 100;
-			double accuracy = 1;//getRMSE(testExpectedY[i], pred);
+	public ModelInfo[] gridSearch(double[][] testDataX, double[][] expectedY, int kValid, int[] hiddenLayers, int[][] hiddenNeurons,
+			Activation[] actFunc, Loss[] lossFunc, double[] alphas, double[] betas, double[] minErros, int[] epochs)
+			throws Exception {
+		long totalTime = System.currentTimeMillis();
+		System.out.println("Grid Search Started....");
+		int modelCount = hiddenLayers.length * actFunc.length * lossFunc.length * alphas.length * betas.length
+				* minErros.length * epochs.length * hiddenNeurons.length * 2;
+		ModelInfo[] mInfo = new ModelInfo[modelCount];
+		int count = 0;
+		for (int i = 0; i < hiddenLayers.length; i++) {
+			for (int j = 0; j < actFunc.length; j++) {
+				for (int k = 0; k < lossFunc.length; k++) {
+					for (int m = 0; m < alphas.length; m++) {
+						for (int n = 0; n < betas.length; n++) {
+							for (int p = 0; p < minErros.length; p++) {
+								for (int q = 0; q < epochs.length; q++) {
+									for (int b = 0; b < (hiddenNeurons[i].length - hiddenLayers[i] + 1); b++) {
+										StringBuilder inf = new StringBuilder();
+										long time = System.currentTimeMillis();
+										var builder = NetworkBuilderFactory.getInstance().newNetworkBuilder();
+										builder.inputLayer("Input", testDataX[0].length);
+										inf.append(testDataX[0].length).append("-");
+										for (int ix = b; ix < hiddenLayers[i] + b; ix++) {
+											builder.hiddenLayer("Hidden" + (ix + 1), actFunc[j], hiddenNeurons[i][ix]);
 
-			sumAccuracy += accuracy;
-			double sAccuracy = ((1 - getSEE(testExpectedY[i], pred)) * 100);
-			sseAccuracy += sAccuracy;
-			boolean pass = Aicme4jUtils.getMaxIndex(testExpectedY[i]) == predIndex;//match(testExpectedY[i], pred);
-			passMark += pass ? 1 : 0;
-			if(verbose)
-			System.out.printf("\n%s\t\tMSE: %.2f%s\tSSE: %.2f%s \t %s\n", line, accuracy , "%", sAccuracy, "%", pass ? "[OK]" : "[ERROR]");
+											inf.append(hiddenNeurons[i][ix]).append("-");
+										}
+										inf.append(expectedY[0].length).append(",").append(actFunc[j].toString())
+												.append(",").append(lossFunc[k].toString()).append(",")
+												.append(epochs[q]).append(",").append(alphas[m]).append(",")
+												.append(betas[n]);
+										var network = builder.outputLayer("Output", actFunc[j], expectedY[0].length)
+												.outputLayer("Output", actFunc[j], expectedY[0].length)
+												.train(testDataX, expectedY, alphas[m], betas[n], epochs[q],
+														minErros[p], lossFunc[k])
+												.save("./resources/gridSearch/grid_model" + String.format("%04d", count)
+														+ ".ann")
+												.build();
+										time = System.currentTimeMillis() - time;
+										double[][] score = crossValidate(testDataX, expectedY, kValid, seed, network, false);
+										mInfo[count++] = new ModelInfo(inf.toString(), time, score);
+										System.out.println(Arrays.toString(score[1]));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
 		}
-		System.out.printf("MeanSquaredError: %.2f%s\t StandardErrorEstimate: %.2f%s \t PredictionAccuracy: %.2f%s\n", 
-				sumAccuracy / testDataX.length, "%", sseAccuracy / testDataX.length, "%", passMark * 100 / testDataX.length, "%");
+		System.out
+				.println("Grid Search Concluded in " + ((System.currentTimeMillis() - totalTime) / 1000) + " seconds");
+		return mInfo;
 	}
+
 }

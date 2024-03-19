@@ -75,7 +75,7 @@ public class GameView extends JPanel implements ActionListener{
 		setBackground(Color.LIGHT_GRAY);
 		setDoubleBuffered(true);
 //		spy = new Spy(MODEL_WIDTH, MODEL_HEIGHT);
-		agent = new FuzzyAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
+		agent = new NeuralNetworkAgent(MODEL_WIDTH, MODEL_HEIGHT, PLAYER_COLUMN, 3);
 		//Creates a viewing area of 900 x 600 pixels
 		dim = new Dimension(MODEL_WIDTH * SCALING_FACTOR, MODEL_HEIGHT * SCALING_FACTOR);
     	super.setPreferredSize(dim);

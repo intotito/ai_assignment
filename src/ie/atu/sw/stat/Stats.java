@@ -10,60 +10,125 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+/**
+ * A utility class that provides basic statistical functions.
+ */
 public class Stats {
+	/**
+	 * Mean Square Error
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the mean square error
+	 */
 	public double getMSE(double[][] expected, double[][] prediction) {
 		return getSSE(expected, prediction) / expected.length;
 	}
-
+	/**
+	 * Root Mean Square Error
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the root mean square error
+	 */
 	public double getRMSE(double[][] expected, double[][] prediction) {
 		return Math.sqrt(getMSE(expected, prediction));
 	}
-
+	/**
+	 * Sum of Square Error
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the sum of square error
+	 */
 	public double getSSE(double[][] expected, double[][] prediction) {
 		return IntStream.range(0, expected.length).mapToDouble(i -> Math.pow(expected[i][0] - prediction[i][0], 2))
 				.sum();
 	}
-
+	/**
+	 * Sum of Square Regression
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the sum of square regression
+	 */
 	public double getSSR(double[][] expected, double[][] prediction) {
 		double mean = getMean(expected);
 		return IntStream.range(0, prediction.length).mapToDouble(i -> Math.pow(prediction[i][0] - mean, 2)).sum();
 	}
-
+	/**
+	 * Mean Absolute Error
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the mean absolute error
+	 */
 	public double getMAE(double[][] expected, double[][] prediction) {
 		return IntStream.range(0, prediction.length).mapToDouble(i -> Math.abs(prediction[i][0] - expected[i][0]))
 				.average().getAsDouble();
 	}
-	
+	/**
+	 * Root Squared
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @param verbose true if detailed info will be printed
+	 * @return the root squared
+	 */
 	@Regression(message = "R Squared (R2)")
-	public double getRSquared(double[][] expected, double[][] prediction, boolean verbose) {
+	public double getRSquared(double[][] expected, double[][] prediction, String[] classNames, boolean verbose) {
 		double ssr = getSSR(expected, prediction);
 		return ssr / (ssr + getSSE(expected, prediction));
 	}
-
+	/**
+	 * Adjusted Root Squared
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @param verbose true if detailed info will be printed
+	 * @return the adjusted root squared
+	 */
 	@Regression(message = "Adjusted R Squared (aR2)")
-	public double getARSquared(double[][] expected, double[][] prediction, boolean verbose) {
-		return 1 - ((1 - getRSquared(expected, prediction, false)) * (expected.length - 1)
+	public double getARSquared(double[][] expected, double[][] prediction, String[] classNames, boolean verbose) {
+		return 1 - ((1 - getRSquared(expected, prediction, classNames, false)) * (expected.length - 1)
 				/ (expected.length - expected[0].length - 1));
 	}
-	
+	/**
+	 * Root Squared
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the root squared
+	 */	
 	public double[] softMax(double[] vector) {
 		double sum = IntStream.range(0, vector.length).mapToDouble(i -> Math.exp(vector[i])).sum();
 		return IntStream.range(0,  vector.length).mapToDouble(i -> Math.exp(vector[i]) / sum).toArray();
 	}
-
+	/**
+	 * Mean of the values
+	 * @param values input array
+	 * @param axis index of the multi-dimensional array to compute
+	 * @return the mean
+	 */
 	public double getMean(double[][] values, int axis) {
 		return IntStream.range(0, values.length).mapToDouble(i -> values[i][axis]).average().getAsDouble();
 	}
-
+	/**
+	 * Mean of the values, with implicit assumption that the index of 
+	 * the multi-dimensional array to evaluate is 0.
+	 * @param values input array
+	 * @return the mean
+	 */
 	public double getMean(double[][] values) {
 		return getMean(values, 0);
 	}
-
+	/**
+	 * Argmax of the value. Returns index of the item with the highest value. 
+	 * @param values input array
+	 * @return the argmax
+	 */
 	public int argMax(double[] values) {
 		final double max = Arrays.stream(values).max().getAsDouble();
 		return IntStream.range(0, values.length).map(i -> (values[i] == max) ? i : 0).sum();
 	}
-
+	/**
+	 * Computes the confusion matrix.
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @return the confusion matrix with dimension of <code>classes by classes</code>
+	 */
 	public int[][] getConfusionMatrix(double[][] expected, double[][] prediction){
 		int classes = expected[0].length;
 		int[][] matrix = new int[classes][classes];
@@ -80,7 +145,11 @@ public class Stats {
 		}
 		return matrix;
 	}
-	
+	/**
+	 * Print the confusion matrix in a pretty format
+	 * @param matrix the confusion matrix
+	 * @param features the name of the features
+	 */
 	public void printConfusionMatrix(int[][] matrix, String[] features) {
 		int col = 15;
 		String sFormat = "%-" + col + "s";
@@ -98,18 +167,30 @@ public class Stats {
 		IntStream.range(0,  col * (matrix[0].length + 1) + matrix[0].length + 1).forEach(i -> System.out.print(i == 0 ? "\n-" : "-"));
 	}
 	
+	/**
+	 * Accuracy given F1-Score
+	 * @param f1Scores the F1-Score
+	 * @return the accuracy
+	 */
 	public double getAccuracy(double[][] f1Scores) {
 		int total = IntStream.range(0, f1Scores.length).map(z -> (int)f1Scores[z][f1Scores[z].length - 1]).sum();
 		return  IntStream.range(0, f1Scores.length).
 				mapToDouble(z -> f1Scores[z][f1Scores[z].length - 1] * (f1Scores[z][0] + f1Scores[z][1]) / 2.0).sum() / total * 100;
 	}
-	
+	/**
+	 * Accuracy given Confusion Matrix
+	 * @param f1Scores the Confusion Matrix
+	 * @return the accuracy
+	 */
 	public double getAccuracy(int[][] matrix) {
 		int total = IntStream.range(0,  matrix.length)
 				.map(i -> IntStream.range(0,  matrix[i].length).map(z -> matrix[i][z]).sum()).sum();
 		return IntStream.range(0, matrix.length).mapToDouble(i -> matrix[i][i]).sum() / total * 100;
 	}
-	
+	/**
+	 * Print Accuracy report
+	 * @param f1Scores the F1-Scores
+	 */
 	public void printAccuracyReport(double[][] f1Scores) {
 		int col = 15;
 		String sFormat = "%-" + col + "s";
@@ -150,7 +231,11 @@ public class Stats {
 		}
 		IntStream.range(0,  col * (f1Scores[0].length) + f1Scores[0].length).forEach(i -> System.out.print(i == 0 ? "\n-" : "-"));
 	}
-	
+	/**
+	 * Print the F1-Scores
+	 * @param f1Scores the F1-Scores
+	 * @param features the name of the features
+	 */
 	public void printF1Scores(double[][] f1Scores, String[] features) {
 		int col = 15;
 		String sFormat = "%-" + col + "s";
@@ -173,7 +258,11 @@ public class Stats {
 		}
 		IntStream.range(0,  col * (f1Scores[0].length) + f1Scores[0].length).forEach(i -> System.out.print(i == 0 ? "\n-" : "-"));
 	}
-	
+	/**
+	 * Get F1-Score given Confusion Matrix
+	 * @param matrix the Confusion Matrix
+	 * @return the F1-Scores
+	 */
 	public double[][] getF1Scores(int[][] matrix) {
 		String[] metrics = { "Precision(%)", "Recall(%)", "F1-Score(%)", "Support" };
 		double[][] scores = new double[matrix.length][metrics.length];
@@ -199,22 +288,34 @@ public class Stats {
 		}
 		return scores;
 	}
-							   
+	/**
+	 * Get the Accuracy of a model					   
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @param verbose true if detailed info will be printed
+	 * @return the accuracy
+	 */
 	@Classification(message = "Model Accuracy:")
-	public double modelAccuracy(double[][] expected, double[][] prediction, boolean verbose) {
+	public double modelAccuracy(double[][] expected, double[][] prediction, String[] classNames, boolean verbose) {
 		int[][] matrix = getConfusionMatrix(expected, prediction);
 		double[][] f1Scores = getF1Scores(matrix);
-		String[] features = new String[] { "Up", "Cruise", "Down" };
+//		String[] features = new String[] { "Up", "Cruise", "Down" };
 		if(verbose) {
-			printConfusionMatrix(matrix, features);
-			printF1Scores(f1Scores, features);
+			printConfusionMatrix(matrix, classNames);
+			printF1Scores(f1Scores, classNames);
 			printAccuracyReport(f1Scores);
 		}
 		return getAccuracy(f1Scores);
 	}
-	
+	/**
+	 * The Mean Category Cross-Entropy
+	 * @param expected the truth value
+	 * @param prediction the predicted value
+	 * @param verbose true if detailed will be printed
+	 * @return the mean category cross-entropy
+	 */
 	@Classification(message = "Mean Category Cross-Entropy")
-	public double getMCCE(double[][] expected, double[][] prediction, boolean verbose) {
+	public double getMCCE(double[][] expected, double[][] prediction, String[] classNames, boolean verbose) {
 		double sum = 0;
 		for(int i = 0; i < expected.length; i++) {
 			for(int j = 0; j < expected[i].length; j++) {
@@ -224,7 +325,20 @@ public class Stats {
 		return sum / expected.length;
 	}
 
-	public void scoreModel(double[][] expected, double[][] prediction, ModelType type, boolean verbose)
+	/**
+	 * Evaluates the performance of a NeuralNetwork using annotated metrics. This method calls all relevant 
+	 * methods required to evaluate a model reflectively.
+	 * @param expected the expected true values
+	 * @param prediction the predicted value
+	 * @param classNames names of the dependent variables
+	 * @param type the type of model
+	 * @param verbose true if detailed will be printed
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
+	public void scoreModel(double[][] expected, double[][] prediction, String[] classNames, ModelType type, boolean verbose)
 			throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Class<? extends Annotation> ann = switch (type) {
 		case REGRESSION -> Regression.class;
@@ -238,7 +352,7 @@ public class Stats {
 				Method mMethod = ann.getDeclaredMethod("message");
 				method.setAccessible(true);
 				String message = (String) mMethod.invoke(myAnn);
-				double result = (double)method.invoke(this, expected, prediction, verbose);
+				double result = (double)method.invoke(this, expected, prediction, classNames, verbose);
 				values.put(message, result);
 			}
 		}

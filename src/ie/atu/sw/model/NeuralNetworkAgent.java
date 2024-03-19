@@ -5,11 +5,12 @@ import jhealy.aicme4j.net.NeuralNetwork;
 import jhealy.aicme4j.net.Output;
 
 public class NeuralNetworkAgent extends Agent{
+	private static final String MODEL_PATH = "./resources/gridSearch/Signet7.ann";
 	private NeuralNetwork network;
 	public NeuralNetworkAgent(int STAGE_WIDTH, int STAGE_HEIGHT, int PLAYER_COLUMN, int horizon) {
 		super(STAGE_WIDTH, STAGE_HEIGHT, PLAYER_COLUMN, horizon);
 		try {
-			network = Aicme4jUtils.load("./resources/gridSearch/Signet7.ann");
+			network = Aicme4jUtils.load(MODEL_PATH);
 			System.out.println(network.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -21,7 +22,6 @@ public class NeuralNetworkAgent extends Agent{
 		int answer = 0;
 		try {
 			answer = (int) network.process(extractSample(player_row), Output.LABEL_INDEX);
-//			System.out.println("Awumen OOOOO");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
