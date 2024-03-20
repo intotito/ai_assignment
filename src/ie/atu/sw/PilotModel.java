@@ -26,7 +26,11 @@ public class PilotModel extends TestPlatform {
 
 	}
 
-
+	/**
+	 * Train a single neural network
+	 * @param fileName name of the file to save the network
+	 * @return self
+	 */
 	public PilotModel train(String fileName) throws Exception {
 		long time = System.currentTimeMillis();
 		out.println("Network Training Started ... ");
@@ -39,9 +43,14 @@ public class PilotModel extends TestPlatform {
 
 		return this;
 	}
-
+	/**
+	 * Train batch of neural networks
+	 * @param fileName name pattern of the file to save the networks
+	 * @return self
+	 * @throws Exception
+	 */
 	public PilotModel trainBatch(String fileName) throws Exception {
-		ExecutorService executor = Executors.newFixedThreadPool(4);
+		ExecutorService executor = Executors.newFixedThreadPool(1);
 		var writer = new BufferedWriter(new FileWriter("./resources/data/" + fileName + ".csv", true));
 		Consumer<String> write = (String s) -> {
 			executor.execute(() -> {
@@ -81,12 +90,28 @@ public class PilotModel extends TestPlatform {
 	}
 
 	public static void main(String[] arg) throws Exception {
+/*
+ * 		Load and test Model
+ */
 		new PilotModel(31)
-//		.trainBatch("report");
-		.loadData("./train_data_3_by_7_1.00.csv", 21, 3, 0.5)
-//		.train("model_3_by_7_1.03")
-		.loadModel("./resources/gridSearch/grid_model1120.ann")
-//		.crossValidate(5, 3232, true);
+		.loadData(TRAINING_DATA, 21, 3, 0.75)
+		.loadModel(GRID_PATH + "1120.ann")	
 		.testModel(ModelType.CLASSIFICATION, true);
+
+/*
+*		 ** Grid Search **
+*    	 *****************		
+		new PilotModel(7739)
+		.trainBatch("report");
+*/
+
+
+ /* 		** Train Single Model **
+ * 		************************ 
+ 		new PilotModel(7739)
+ 		.loadData(TRAINING_DATA, 21, 3, 0.75)
+ 		.train("modelXX1.ann")
+ 		.testModel(ModelType.CLASSIFICATION, true);
+*/ 
 	}
 }

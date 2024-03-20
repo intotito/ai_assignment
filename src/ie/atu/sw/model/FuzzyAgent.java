@@ -37,7 +37,7 @@ public class FuzzyAgent extends Agent {
 	@Override
 	public int predict(int player_row) {
 		double[] sample = extractSample(player_row);
-		decipher(sample, 3, 7);
+//		decipher(sample, 3, 7);
 		int datum = 3;
 		double[] softMax = {0.715, 0.195, 0.09};
 		double[] tBag = new double[getWidth ()+ 1];
@@ -65,24 +65,16 @@ public class FuzzyAgent extends Agent {
 			bottom = bottom - (datum + 1);
 			top = (datum + 1) - top;
 			tBag[i + 1] = top;// * softMax[i];
-			bBag[i + 1] = bottom;// * softMax[i];
-			System.out.println("Top[" + i + "] = " + top);
-			System.out.println("Bottom[" + i + "] = " + bottom);
-			
+			bBag[i + 1] = bottom;// * softMax[i];			
 		}
 		double top_vec = IntStream.range(0,  getWidth()).mapToDouble(i -> Math.toDegrees(softMax[i] * Math.atan(tBag[i + 1] - tBag[i]))).sum();
 		double bottom_vec = IntStream.range(0,  getWidth()).mapToDouble(i -> Math.toDegrees(softMax[i] * Math.atan(bBag[i + 1] - bBag[i]))).sum();
-		
-//		System.out.println("Top_Vec: " + top_vec);
-//		System.out.println("Bottom_Vec: " + bottom_vec);
-		
-	//	JFuzzyChart.get().chart(fb);
+
 		fb.setVariable("top_vec", top_vec);
 		fb.setVariable("bottom_vec", bottom_vec);
 		fb.evaluate();
 		Variable tip = fb.getVariable("direction");
 		double ans = Math.round(tip.defuzzify());
-//		System.out.println("Evaluation: " + ans);
 		
 		return (int)ans;
 	}

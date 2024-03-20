@@ -1,11 +1,12 @@
 package ie.atu.sw.model;
 
+import ie.atu.sw.TestPlatform;
 import jhealy.aicme4j.net.Aicme4jUtils;
 import jhealy.aicme4j.net.NeuralNetwork;
 import jhealy.aicme4j.net.Output;
 
 public class NeuralNetworkAgent extends Agent{
-	private static final String MODEL_PATH = "./resources/gridSearch/Signet7.ann";
+	private static final String MODEL_PATH = TestPlatform.GRID_PATH + "1120.ann";
 	private NeuralNetwork network;
 	public NeuralNetworkAgent(int STAGE_WIDTH, int STAGE_HEIGHT, int PLAYER_COLUMN, int horizon) {
 		super(STAGE_WIDTH, STAGE_HEIGHT, PLAYER_COLUMN, horizon);

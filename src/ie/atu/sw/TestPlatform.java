@@ -27,10 +27,14 @@ import jhealy.aicme4j.net.Loss;
 import jhealy.aicme4j.net.NeuralNetwork;
 import jhealy.aicme4j.net.Output;
 /**
- * This class provides various methods for model evaluation
+ * This class provides various methods for data processing
  */
 public abstract class TestPlatform {
-	
+	public static final String GRID_PATH = "./resources/gridSearch/grid_model";
+	public static final String TRAINING_DATA = "./resources/data/train_data.csv";
+	/**
+	 * This class is used to store model performance metrics in Grid Search
+	 */
 	protected record ModelInfo(String networkInfo, long time, double[][] scores) implements Comparable<ModelInfo> {
 		public int compareTo(ModelInfo a) {
 			Stats stats = new Stats();
@@ -46,10 +50,26 @@ public abstract class TestPlatform {
 
 	public abstract TestPlatform train(String fileName) throws Exception;
 	
+	/**
+	 * K-Fold Cross-Validation
+	 * @param k the number of folds
+	 * @param seed the random seed
+	 * @param verbose true if detailed info will be displayed
+	 * @return k-length two dimensional array of results
+	 */
 	public double[][] crossValidate(int k, int seed, boolean verbose) throws Exception {
 		return crossValidate(trainX, trainExpected, k, seed, network, verbose);
 	}
-	
+	/**
+	 * K-Fold Cross-Validation
+	 * @param X training data
+	 * @param y truth values
+	 * @param ann Neural Network under evaluation
+	 * @param k the number of folds
+	 * @param seed the random seed
+	 * @param verbose true if detailed info will be displayed
+	 * @return k-length two dimensional array of results
+	 */
 	public double[][] crossValidate(double[][] X, double[][] y, int k, int seed, NeuralNetwork ann, boolean verbose) throws  Exception {
 		Stats stats = new Stats();
 		Random random = new Random(seed);
@@ -90,6 +110,13 @@ public abstract class TestPlatform {
 		return scores;
 	}
 
+	/**
+	 * Split training data into training and test sets
+	 * @param data training data to be split
+	 * @param fraction fraction of data to be reserved for testing
+	 * @param seed the random seed
+	 * @return a three dimensional array consisting of training and test data
+	 */
 	private double[][][] splitData(double[][] data, double fraction, int seed) {
 		List<double[]> dataSet = new ArrayList<double[]>(Arrays.asList(data));
 		Random r = new Random(seed);
@@ -101,6 +128,15 @@ public abstract class TestPlatform {
 		return new double[][][] { trainSet.toArray(double[][]::new), dataSet.toArray(double[][]::new) };
 	}
 
+	/**
+	 * Load data from file and split into training and test sets
+	 * @param fileName the name of the data file
+	 * @param w1 number of independent variables
+	 * @param w2 number of dependent variables
+	 * @param divRatio fraction of data to be reserved for testing
+	 * @return self
+	 * @throws IOException
+	 */
 	public TestPlatform loadData(String fileName, int w1, int w2, double divRatio) throws IOException {
 		double[][][] data = splitData(getData(fileName, w1, w2), divRatio, seed);
 		double[][][] trainData = sliceData(data[0], w1, w2);
@@ -111,19 +147,36 @@ public abstract class TestPlatform {
 		testExpected = testData[1];
 		return this;
 	}
-
+	/**
+	 * Evaluate the model
+	 * @param type the type of model evaluation to be run
+	 * @param verbose true if detailed info will be displayed
+	 * @return self
+	 * @throws Exception
+	 */
 	public TestPlatform testModel(ModelType type, boolean verbose) throws Exception {
 		Stats stats = new Stats();
 		stats.scoreModel(testExpected, getResultSoftMax(testX, network), classNames, type, verbose);
 		return this;
 	}
-
+	/**
+	 * Load a trained model from file
+	 * @param fileName the name of the model file
+	 * @return self
+	 * @throws Exception
+	 */
 	public TestPlatform loadModel(String fileName) throws Exception {
 		network = Aicme4jUtils.load("./" + fileName);
 		System.out.println(network.toString());
 		return this;
 	}
-
+	/**
+	 * Split data into training and test sets
+	 * @param data the data to be split
+	 * @param w1 number of independent variables
+	 * @param w2 number of dependent variables
+	 * @return three dimensional array containing the training and test dataset
+	 */
 	private double[][][] sliceData(double[][] data, int w1, int w2) {
 		double[][] trainX = new double[data.length][w1];
 		double[][] expectedY = new double[data.length][w2];
@@ -133,7 +186,14 @@ public abstract class TestPlatform {
 		}
 		return new double[][][] { trainX, expectedY };
 	}
-
+	/**
+	 * Load data from file
+	 * @param fileName the name of the file
+	 * @param w1 number of independent variables
+	 * @param w2 number of dependent variables
+	 * @return data from file as two dimensional array
+	 * @throws IOException
+	 */
 	private double[][] getData(String fileName, int w1, int w2) throws IOException {
 		File file = new File("./" + fileName);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
@@ -156,7 +216,14 @@ public abstract class TestPlatform {
 		}
 		return dataset;
 	}
-
+	/**
+	 * Write data to file
+	 * @param columnNames the names of the features
+	 * @param data independent variables
+	 * @param expected dependent variables
+	 * @param fileName name of the file
+	 * @throws IOException
+	 */
 	public static void arrayToCSV(String[] columnNames, double[][] data, double[][] expected, String fileName)
 			throws IOException {
 		StringBuffer sb = new StringBuffer();
@@ -176,7 +243,13 @@ public abstract class TestPlatform {
 		byte[] strToBytes = str.getBytes();
 		Files.write(path, strToBytes);
 	}
-
+	/**
+	 * Evaluate input data with a NeuralNetwork
+	 * @param testDataX input data to be evaluated
+	 * @param network the NeuralNetwork
+	 * @return prediction from the NeuralNetwork
+	 * @throws Exception
+	 */
 	private double[][] getResult(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
@@ -187,6 +260,13 @@ public abstract class TestPlatform {
 		return ret;
 	}
 	
+	/**
+	 * Evaluate the softmax for input data with a NeuralNetwork
+	 * @param testDataX input data to be evaluated
+	 * @param network the NeuralNetwork
+	 * @return softmax prediction from the NeuralNetwork
+	 * @throws Exception
+	 */
 	private double[][] getResultSoftMax(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
@@ -197,6 +277,22 @@ public abstract class TestPlatform {
 		return ret;
 	}
 
+	/**
+	 * Performs a search through the ranges of parameters supplied
+	 * @param testDataX training input data
+	 * @param expectedY truth data
+	 * @param kValid K-Fold validation number
+	 * @param hiddenLayers hidden layers to search through
+	 * @param hiddenNeurons hidden neuron numbers to search through
+	 * @param actFunc activation functions to search through
+	 * @param lossFunc loss functions to search through
+	 * @param alphas alphas to search through
+	 * @param betas betas to search through
+	 * @param minErros minimum errors to search through
+	 * @param epochs epochs to search through
+	 * @return performance information for every model trialed
+	 * @throws Exception
+	 */
 	public ModelInfo[] gridSearch(double[][] testDataX, double[][] expectedY, int kValid, int[] hiddenLayers, int[][] hiddenNeurons,
 			Activation[] actFunc, Loss[] lossFunc, double[] alphas, double[] betas, double[] minErros, int[] epochs)
 			throws Exception {
@@ -232,7 +328,7 @@ public abstract class TestPlatform {
 												.outputLayer("Output", actFunc[j], expectedY[0].length)
 												.train(testDataX, expectedY, alphas[m], betas[n], epochs[q],
 														minErros[p], lossFunc[k])
-												.save("./resources/gridSearch/grid_model" + String.format("%04d", count)
+												.save(GRID_PATH + String.format("%04d", count)
 														+ ".ann")
 												.build();
 										time = System.currentTimeMillis() - time;
