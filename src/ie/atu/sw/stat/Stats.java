@@ -299,7 +299,6 @@ public class Stats {
 	public double modelAccuracy(double[][] expected, double[][] prediction, String[] classNames, boolean verbose) {
 		int[][] matrix = getConfusionMatrix(expected, prediction);
 		double[][] f1Scores = getF1Scores(matrix);
-//		String[] features = new String[] { "Up", "Cruise", "Down" };
 		if(verbose) {
 			printConfusionMatrix(matrix, classNames);
 			printF1Scores(f1Scores, classNames);

@@ -17,11 +17,11 @@ import jhealy.aicme4j.NetworkBuilderFactory;
 import jhealy.aicme4j.net.Activation;
 import jhealy.aicme4j.net.Loss;
 
-public class PilotModel extends TestPlatform {
+public class ModelSelection extends TestPlatform {
 
 
 
-	public PilotModel(int seed) throws Exception {
+	public ModelSelection(int seed) throws Exception {
 		this.seed = seed;
 
 	}
@@ -31,7 +31,7 @@ public class PilotModel extends TestPlatform {
 	 * @param fileName name of the file to save the network
 	 * @return self
 	 */
-	public PilotModel train(String fileName) throws Exception {
+	public ModelSelection train(String fileName) throws Exception {
 		long time = System.currentTimeMillis();
 		out.println("Network Training Started ... ");
 		network = NetworkBuilderFactory.getInstance().newNetworkBuilder().inputLayer("Input", 21)
@@ -49,7 +49,7 @@ public class PilotModel extends TestPlatform {
 	 * @return self
 	 * @throws Exception
 	 */
-	public PilotModel trainBatch(String fileName) throws Exception {
+	public ModelSelection trainBatch(String fileName) throws Exception {
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		var writer = new BufferedWriter(new FileWriter("./resources/data/" + fileName + ".csv", true));
 		Consumer<String> write = (String s) -> {
@@ -89,15 +89,57 @@ public class PilotModel extends TestPlatform {
 		return this;
 	}
 
+	/**
+	 * This method runs a test on all the models built from the grid search
+	 * @param fileName name of the file to write the result
+	 * @throws IOException if there are no models to test or other I/O issues
+	 */
+	public void testAllModel(String fileName) throws IOException {
+		Stats stats = new Stats();
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		var writer = new BufferedWriter(new FileWriter("./resources/data/" + fileName + ".csv", true));
+		Consumer<String> write = (String s) -> {
+			executor.execute(() -> {
+				try {
+					writer.write(s);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+		};
+		loadData(TRAINING_DATA, 21, 3, 0.0);
+		System.out.println("Testing Started...");
+		for(int i = 0; true; i++) {
+			try {
+				loadModel(GRID_PATH + String.format("%04d", i) + ".ann");
+				double acc = stats.modelAccuracy(testExpected, getResult(testX, network), classNames, false);
+				write.accept(String.format("%04d, %.2f\n", i, acc));
+			} catch (IOException e) {
+				e.printStackTrace();
+				break;
+			} catch (Exception e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+		writer.close();
+		System.out.println("Testing concluded");
+	}
 	public static void main(String[] arg) throws Exception {
+		
+		/*
+		 * Test All Models
+		 */
+		new ModelSelection(31).testAllModel("test_report");
+		
 /*
  * 		Load and test Model
- */
+ 
 		new PilotModel(31)
-		.loadData(TRAINING_DATA, 21, 3, 0.75)
-		.loadModel(GRID_PATH + "1120.ann")	
+		.loadData(TRAINING_DATA, 21, 3, 0.0)
+		.loadModel(GRID_PATH + "0665.ann")	
 		.testModel(ModelType.CLASSIFICATION, true);
-
+*/
 /*
 *		 ** Grid Search **
 *    	 *****************		

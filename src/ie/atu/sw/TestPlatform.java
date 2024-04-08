@@ -46,7 +46,7 @@ public abstract class TestPlatform {
 	protected double[][] trainX, trainExpected;
 	protected double[][] testX, testExpected;
 	protected int seed;
-	private String[] classNames;
+	protected String[] classNames;
 
 	public abstract TestPlatform train(String fileName) throws Exception;
 	
@@ -250,7 +250,7 @@ public abstract class TestPlatform {
 	 * @return prediction from the NeuralNetwork
 	 * @throws Exception
 	 */
-	private double[][] getResult(double[][] testDataX, NeuralNetwork network) throws Exception {
+	public double[][] getResult(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
 			network.process(testDataX[i], Output.LABEL_INDEX);
@@ -267,7 +267,7 @@ public abstract class TestPlatform {
 	 * @return softmax prediction from the NeuralNetwork
 	 * @throws Exception
 	 */
-	private double[][] getResultSoftMax(double[][] testDataX, NeuralNetwork network) throws Exception {
+	public double[][] getResultSoftMax(double[][] testDataX, NeuralNetwork network) throws Exception {
 		double[][] ret = new double[testDataX.length][];
 		for(int i = 0; i < testDataX.length; i++) {
 			network.process(testDataX[i], Output.LABEL_INDEX);

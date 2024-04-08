@@ -48,11 +48,11 @@
         further used as a trainer to generate training data for the Neural Network. Model selection 
         was done using a brute force approach that calls for a grid search using varying ranges of 
         hyper parameters to select an optimum model. Metrics for model evaluation was based on 
-        F1-Accuracy score and Mean Cross-Entropy Loss through cross-validation of training data.
-        A network configuration of 21-15-3 with Inverse Square Root Linear Unit Activation Function 
-        (ISRLU) with a test accuracy score of 100\% and MCE loss of 0.1837 was selected as the best 
+        F1-Accuracy score and Mean Cross-Entropy Loss through cross-validation with training data.
+        A network configuration of 21-20-3 with Rectified Linear Unit Activation Function 
+        (RELU) with a test accuracy score of 100\% and MCCE loss of 0.1839 was selected as the best 
         model. Furthermore, an autopilot agent utilizing Fuzzy Logic was implemented to solve the 
-        problem and also performed flawlessly. 
+        problem. 
 
     \end{abstract}
 }
@@ -64,7 +64,7 @@
 \label{sec:introduction}
 
 \IEEEPARstart{T}{}he game consists
-of a 30 $\times$ 20 grid where the ship is at a constant column and can navigate vertically i.e. up and 
+of a 30 $\times$ 20 grid where the ship is at a fixed column and can navigate vertically i.e. up and 
 down. A programmed agent capable of flawlessly navigating the tunnel in a consistent manner was designed
 to be the basis of training data generation. The agent's navigation algorithm was designed in the basis 
 of navigating the ship through the middle of the weighted opening in the next $n$ columns with respect to 
@@ -82,22 +82,18 @@ sampling and preprocessing data.
 
 \subsection{Programmed Agent}
 
-The behavior of this agent was implemented on the $ProgrammedAgent$ class. To predict which step to take the
-weighted center of the opening of the cave is evaluated using a softmax function as weight. $W = \sigma(N)$,
+The behavior of this agent was implemented on the $ProgrammedAgent$ class. To predict which step to take, the
+weighted center of the opening of the cave is evaluated for a given horizon $n$ using the softmax function 
+of the proximity as weights. $W = \sigma(N)$,
 where $\sigma$ is the softmax function and $W$ is weight, $W = \{w_1, w_2, ..., w_n\}$ and $N = \{1, 2, ..., 
-n\}$. The weighted center is evaluated by taking the mean of the sum of the dot product of the weight and 
-the center of each column. $y = \frac{1}{n}\sum\limits_{i=1}^{n}W_i \times \frac{h_i}{2} = \frac{1}{2n}
+n\}$. The weighted center is evaluated by taking the mean of the dot product of the weight and 
+the center of each column (See Fig.~\ref{fig:stage}). $y = \frac{1}{n}\sum\limits_{i=1}^{n}W_i \times \frac{h_i}{2} = \frac{1}{2n}
 (W \cdot H)$ where $h_i$ is the height of the cave's opening for column $i$ and $H$ is the set of heights. 
 The final prediction is determined by the value of $y$ with 
 respect to the ships current row. The ship will navigate UP if $y > player\_row$ and DOWN if $y 
 < player\_row$ and will STAY put if $y = player\_row$
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{stage.png}
-    \caption{Stage}
-    \label{fig:stage}
-\end{figure}
+
 
 \section{Sampling}
 \subsubsection*{Buffering}
@@ -118,27 +114,23 @@ buffer $B$. Data extraction runs at a big O of $O(|F|)$ where $|F|=n \times (2n+
 is done at $O(1)$.
 
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{sampling.png}
-    \caption{Sampling}
-    \label{fig:sampling}
-\end{figure}
-
 \section{Feature Design}
 
-The value 3 was chosen for $n$ i.e. the horizon which resulted in 21 input features for the Neural Network. 
+The value 3 was chosen for $n$ i.e. the horizon, which resulted in 21 input features for the Neural Network. 
 A classification model was chosen as three different output is expected, thus the output of the Neural 
 Network consists of 3 nodes.
-Considering the nature of the problem a maximum of 2 hidden layers was considered enough to generalize. 
-The selected features does not curiously involve the position of the ship. This was trialed with a One-hot-
-encoding of the ship position. The values however, never changed through 430 rows of training data, 
-suggesting no contribution to the model. 
+ 
+The selected input features for the model does not include the position of the ship. This decision was made 
+after analyzing the training data which showed that the one-hot encoded values for the position only varies
+in 2 out of 630 training dataset. And thus was considered redundant.
 
 \section{Model Selection}
 A grid search algorithm taking different values for $\alpha, \beta$, epochs, activation functions, loss 
 functions, training speed, number of nodes per layer, number of hidden layers was implemented and used
-to search for the best model. Appendix \ref{app:models} shows a summary of different models selected and their 
+to search for the best model. The following range of values were used for the grid search, $\alpha \to (0.01, 0.001,
+0.0001)$, $\beta \to (0.5, 0.75, 0.95)$, $min\_error \to (0.0001, 0.00001)$, $epochs \to (300, 500)$, 
+$loss\_functions \to (CEE, MSE, SSE)$, $act\_functions \to (TANH, RELU, ISRLU)$, $layers \to (1, 2)$
+Table~\ref{table:top_models} shows a summary of different models selected and their 
 respective performances. 
 
 \subsubsection*{Metrics}
@@ -147,7 +139,11 @@ data. F1-Accuracy was used as the first benchmark for model selection while the 
 used as a tie breaker for models with similar F1-Accuracy scores. 
 
 \subsubsection*{Best Model}
-fs
+The best model was selected after evaluating all the models using unseen test data and the overall best performant
+model recorded a test accuracy of 100\% and Mean Categorical Cross Entropy Error of 0.1839.
+The hyper-parameters and configuration for the best model are listed as follows:
+$\alpha = 0.01,\beta = 0.75, loss=CEE, max\_epochs = 300$, hidden layers = 1, topology = 21-20-3. 
+
 
 \section{Extra - FuzzyAgent}
 This agent was implemented using a Fuzzy Inference System (FIS). 
@@ -177,10 +173,15 @@ $\footnotesize{\texttt{4 : IF $\phi$ IS low AND $\psi$ IS high THEN output IS st
 
 \section{Conclusion}
 
+A programmed agent was designed as a training agent and was used to generate training data. 
+A total of 1671 Neural Network models using 673 training data was built. 25\% of the training data was reserved for 
+testing and 75\% was used for training and validation. Tabulated summaries of the evaluation results are presented 
+in the Appendix. Both the NeuralNetwork Agent and FuzzyAgent were successfully implemented to navigate through the cave successfully. 
+Buffering was implemented, which significantly reduced the frequency of sampling data. Data processing and evaluation 
+libraries were developed to properly evaluate the models.
+However, there have been recorded rare instances of the FuzzyAgent clipping the edges of the cave resulting in a crash.
+
+
 \appendices
-
-\section{Top Grid Search Results}\label{app:models}
-\include{appendix.tex}
-
-
+\include{appendix}
 \end{document}
