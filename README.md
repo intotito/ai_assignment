@@ -1,97 +1,106 @@
 # Artificial Intelligence Assignment
-## Teaching a Neural Network to Fly Autopilot
 
-The goal of this project is to train a neural network to navigate through an endless horizontally scrolling tunnel without clipping any of the edges. 
 
 ## Requirements
  `Java SE Runtime Environment`
 
 
- ## Feature Engineering
+# Teaching a Neural Network to Fly Autopilot
 
- **Dimensions** of the screen is given as $D(rows,cols)=(20,30)$
+## Overview
+This project aims to train an Automatic Neural Network to navigate through an endless horizontally scrolling tunnel without clipping any of the edges. A programmed agent was designed to generate training data for the Neural Network, which was used for model selection through a grid search approach. The project's main metrics for evaluation were the F1-Accuracy score and Mean Cross-Entropy Loss. The best model achieved a test accuracy score of 100% with an MCCE loss of 0.1839.
 
-
- ![Game Display](images/screen.png)
-
-
- **Sampling**: data samples are in the form of a flattened row major 2D array of length $rows \times cols = 600$. Values of `0` represent empty space while `1` represent an obstacle or edge in the screen.
-
- ## Strategy
-
- The following three step strategies were adopted to tackle the problem. 
- - Create a Programmed Agent that can navigate the tunnel perfectly. 
- - Generate training data using the Programmed Agent
- - Train a Neural Network Agent using the data. 
-
- ## Programmed Agent
-
- This component implements an algorithm that can navigate through the cave. It works on the basis of navigating the ship towards the weighted center of the cave opening. A softmax value of the horizon is used as the weight, i.e. for a horizon of say $n$, then the softmax of $[1, 2, ..., n]$ is used as the weight.
-
- ### *Agent*
-
- This is the base class of all specialized agents and implements all the preprocessing functionality. 
-
- #### Preprocessing
-
- - **Sampling Data**: All columns after the ship position is sampled and saved in a buffer. This method may return without performing any operation depending on the state of the agent. 
- - **Extracting Data**: Involves extracting only relevant data from the buffer with respect to the ship position and the pointer to the buffer. The buffer will be consumed until the pointer gets to the end of the buffer which will change the state of the agent to request sampling. 
- - **Looking**: This represents the state of the agent at any given time. If the buffer has been completely consumed then the next request to *sample* will be executed after which the state will be updated. 
+![screen](./images/screen.png)
 
 
- ### Sampling
- Presenting the data in a form that can be visualized easily for analysis i.e. printing the sampled data to the screen. This is necessary to for debugging and easy detection of pattern. Since the sample data is generated as a flattened row-major matrix, printing the sample in a column-major matrix presents the sample as it is shown on the screen.
+## Table of Contents
+
+- [Abstract](#abstract)
+- [Introduction](#introduction)
+- [Agent Design](#agent-design)
+- [Sampling](#sampling)
+- [Feature Design](#feature-design)
+- [Model Selection](#model-selection)
+- [Extra - FuzzyAgent](#extra---fuzzyagent)
+- [Conclusion](#conclusion)
+- [Appendix A: Figures & Tables](#appendix-a-figures--tables)
+
+## Abstract
+
+The goal of this project is to train an Automatic Neural Network to navigate through an endless horizontally scrolling tunnel without clipping any of the edges. A programmed agent was designed to generate training data for the Neural Network. Model selection was done using a grid search approach with varying hyperparameters. The best model achieved a test accuracy score of 100% and MCCE loss of 0.1839. Additionally, a Fuzzy Logic-based autopilot agent was implemented.
+
+## Introduction
+![Stage](./images/stage.png)
+
+**Figure 1: Stage**
 
 
-For context, a sample of the form 
-```
-double[] sample = { 
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1}
-```
-This will be visualized in the form
+The game consists of a 30x20 grid where the ship is at a fixed column and can navigate vertically. A programmed agent capable of flawlessly navigating the tunnel was designed to generate training data. The agent’s navigation algorithm aims to navigate the ship through the middle of the opening in the next `n` columns with respect to the ship's current location. A horizon value of `n=3` was chosen for its smooth navigation performance.
 
-```
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-```
+## Agent Design
 
-This functionality was implemented in the class#method 
 
-```
-	public void decipher(double[] sample) {
-		for (int i = 0; i < sample.length; i++) {
-			int y = (height * i) - (i / width) * (width * height - 1);
-			System.out.printf("%d%c", (int) sample[y], (((i + 1) % (width) != 0) || i == 0) ? ',' : '\n');
-		}
-	}
-```
+![UML Diagram](./images/uml.png)
 
-### Training Agent
+**Figure 2: UML Diagram**
 
-To ensure that high quality data is extracted for training purposes, an agent that could navigate through the tunnel flawlessly was deemed necessary. This will ensure that the ship navigation will be done in a consistent manner using a specific algorithm. It is the hope of the author, that this will enhance generalization for the any eventual model that will be developed.
+All autopilot agents implement the base abstract class `Agent`, which provides functionality for sampling and preprocessing data.
 
-An algorithm that takes into consideration the next $n$ columns and assigns weight to each column depending on their proximity to the ship was considered and implemented using various values of $n$. 
+### Programmed Agent
 
-Consider the state of the game as shown in the diagram below:
+The `ProgrammedAgent` class predicts the next step by evaluating the weighted center of the cave's opening using the softmax function. The final prediction (UP, DOWN, or STAY) is determined by the position of the weighted center relative to the ship's current row.
 
-![Game State](images/state1.png)
+## Sampling
+![Sampling Technique](./images/sampling.png)
 
-The agent will attempt to take a step that will bring it closer to the middle of the obstacles in the next frame. This will be balanced with respect to the next $(n-1)$ frames using various weight as priority tuning. 
+**Figure 3: Sampling Technique**
+### Buffering
+
+Data sampling involves storing the grid beyond the ship’s location in a buffer, which is continuously consumed until exhausted. The buffer size is defined by the stage height and the remaining width from the ship's position to the stage's end.
+
+### Feature Extraction
+
+The agent extracts relevant features from the buffer, specifically the next `n` columns with a height of `2n + 1`. The relevant features are extracted with a complexity of O(|F|), where |F| = `n x (2n + 1)`.
+
+## Feature Design
+
+A horizon value of `n=3` resulted in 21 input features for the Neural Network. The output consists of 3 nodes corresponding to the possible actions (UP, DOWN, STAY).
+
+## Model Selection
+
+A grid search algorithm was used to find the best model by varying hyperparameters such as learning rate (α), momentum (β), epochs, activation functions, loss functions, and the number of nodes per layer and hidden layers. The best model recorded a test accuracy of 100% and MCCE of 0.1839 with the following configuration: α = 0.01, β = 0.75, loss = CEE, epochs = 300, hidden layers = 1, topology = 21-20-3.
+
+## Extra - FuzzyAgent
+
+The FuzzyAgent was implemented using a Fuzzy Inference System (FIS) with inputs ϕ and ψ representing the ship's angles of inclination and declination. The output was determined using the Center Of Gravity defuzzification technique. The rules for FIS were defined to determine the output action (up, down, or still) based on the input angles.
+
+![Membership Functions](./images/fzzy.png)
+
+## Conclusion
+
+A programmed agent was used to generate training data, and a total of 1671 Neural Network models were built. The best model achieved a 100% test accuracy. Additionally, the FuzzyAgent successfully navigated the cave with occasional edge clipping.
+
+## Appendix A: Figures & Tables
+
+### Tables
+
+| Index | Layers       | Activation | Loss | Epochs | Alpha | Beta | Accuracy (%) | MCE    |
+|-------|--------------|------------|------|--------|-------|------|--------------|--------|
+| 1132  | 21-15-20-3   | ISRLU      | SSE  | 500    | 0.01  | 0.95 | 100.00       | 0.1819 |
+| 1120  | 21-15-20-3   | ISRLU      | SSE  | 500    | 0.01  | 0.5  | 100.00       | 0.1827 |
+| 1048  | 21-15-20-3   | ISRLU      | MSE  | 500    | 0.01  | 0.5  | 100.00       | 0.1835 |
+| 1067  | 21-20-45-3   | ISRLU      | MSE  | 300    | 0.01  | 0.95 | 100.00       | 0.1835 |
+| 1049  | 21-20-45-3   | ISRLU      | MSE  | 500    | 0.01  | 0.5  | 100.00       | 0.1836 |
+| 30    | 21-12-3      | ISRLU      | CEE  | 500    | 0.01  | 0.95 | 100.00       | 0.1838 |
+| 31    | 21-15-3      | ISRLU      | CEE  | 500    | 0.01  | 0.95 | 100.00       | 0.1838 |
+| 33    | 21-12-3      | ISRLU      | CEE  | 300    | 0.01  | 0.95 | 100.00       | 0.1838 |
+| 240   | 21-12-3      | ISRLU      | SSE  | 500    | 0.01  | 0.95 | 100.00       | 0.1838 |
+
+**Table: Top Models (Test)**
+
+### Figures
+
+![Reporting](./images/test_report.png)
+**Figure: Top Models (Validation)**
+
+ 
