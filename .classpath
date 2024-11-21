@@ -5,7 +5,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="lib" path="C:/Program Files/Java/aicme4j/aicme4j.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files/Java/fuzzy/jFuzzyLogic.jar"/>
 	<classpathentry kind="output" path="bin"/>
