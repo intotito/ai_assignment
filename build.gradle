@@ -1,0 +1,18 @@
+plugins {
+	id 'application'
+}
+
+application {
+    mainClass = 'ie.atu.sw.Runner'
+}
+
+dependencies {
+    implementation files('lib/jFuzzyLogic.jar', 'lib/aicme4j.jar')
+//    runtime fileTree('lib') { include '*.jar' }
+}
+
+jar{
+	manifest {
+		attributes 'Main-Class': 'ie.atu.sw.Runner' 
+	}
+}
