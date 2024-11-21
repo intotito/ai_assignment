@@ -13,6 +13,26 @@ This project aims to train an Automatic Neural Network to navigate through an en
 ![screen](./images/screen.png)
 
 
+## How to Run the Project
+1. Clone the repository to your local machine. 
+     ```
+    git clone git@github.com:intotito/ai_assignment.git
+    ``` 
+    ```
+    git clone github.com/intotito/ai_assignment.git
+    ```
+2. Navigate to the project directory.
+3. Run the following command to run the application. 
+
+    Windows:
+    ```
+    ./gradlew.bat run
+    ```
+    Linux:
+    ```
+    ./gradlew run
+    ```
+
 ## Table of Contents
 
 - [Abstract](#abstract)
