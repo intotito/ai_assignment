@@ -19,7 +19,7 @@ This project aims to train an Automatic Neural Network to navigate through an en
     git clone git@github.com:intotito/ai_assignment.git
     ``` 
     ```
-    git clone github.com/intotito/ai_assignment.git
+    git clone https://github.com/intotito/ai_assignment.git
     ```
 2. Navigate to the project directory.
 3. Run the following command to run the application. 
