@@ -167,7 +167,7 @@ public abstract class TestPlatform {
 	 */
 	public TestPlatform loadModel(String fileName) throws Exception {
 		network = Aicme4jUtils.load("./" + fileName);
-		System.out.println(network.toString());
+//		System.out.println(network.toString());
 		return this;
 	}
 	/**

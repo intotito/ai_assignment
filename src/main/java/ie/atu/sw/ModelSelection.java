@@ -40,7 +40,7 @@ public class ModelSelection extends TestPlatform {
 				.hiddenLayer("Hidden3", Activation.RELU, 12).outputLayer("Output", Activation.RELU, 3)
 				.train(trainX, trainExpected, 0.001, 0.95, 700, 0.001, Loss.CEE).save("./" + fileName).build();
 		out.print("Model Finished Training in " + (System.currentTimeMillis() - time) / 1000 + " Seconds\n");
-
+		System.out.println(network.toString());
 		return this;
 	}
 	/**
@@ -123,7 +123,7 @@ public class ModelSelection extends TestPlatform {
 			}
 		}
 		writer.close();
-		System.out.println("Testing concluded");
+		System.out.println("Testing concluded: Results written to " + fileName + ".csv");
 	}
 	public static void main(String[] arg) throws Exception {
 		

@@ -14,10 +14,13 @@ This project aims to train an Automatic Neural Network to navigate through an en
 
 
 ## How to Run the Project
-1. Clone the repository to your local machine. 
+1. Clone the repository to your local machine.
+
+    SSH:
      ```
     git clone git@github.com:intotito/ai_assignment.git
     ``` 
+    HTTPS:
     ```
     git clone https://github.com/intotito/ai_assignment.git
     ```
@@ -31,6 +34,13 @@ This project aims to train an Automatic Neural Network to navigate through an en
     Linux:
     ```
     ./gradlew run
+    ```
+    To run with flags
+    - -test <*option*> : **all** - tests all ANN models, **filename** - tests a specific ANN model
+    - -train <*option*> : **all**: Does a grid search and build ANN models, **filename**: Builds a specific ANN model
+
+    ```
+        ./gradlew run --args="-test all"
     ```
 
 ## Table of Contents
