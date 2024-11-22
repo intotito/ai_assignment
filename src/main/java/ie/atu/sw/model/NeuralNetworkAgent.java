@@ -6,7 +6,7 @@ import jhealy.aicme4j.net.NeuralNetwork;
 import jhealy.aicme4j.net.Output;
 
 public class NeuralNetworkAgent extends Agent{
-	private static final String MODEL_PATH = TestPlatform.GRID_PATH + "1120.ann";
+	public static String MODEL_PATH = TestPlatform.GRID_PATH + "1120.ann";
 	private NeuralNetwork network;
 	public NeuralNetworkAgent(int STAGE_WIDTH, int STAGE_HEIGHT, int PLAYER_COLUMN, int horizon) {
 		super(STAGE_WIDTH, STAGE_HEIGHT, PLAYER_COLUMN, horizon);

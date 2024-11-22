@@ -2,6 +2,7 @@ package ie.atu.sw;
 
 import javax.swing.SwingUtilities;
 
+import ie.atu.sw.model.NeuralNetworkAgent;
 import ie.atu.sw.stat.ModelType;
 
 import static java.lang.System.*;
@@ -37,21 +38,36 @@ public class Runner {
 					} else {
 						File file = new File(action);
 						if (!file.exists()) {
-							out.println("File " + action + " does not exist or is not a valid ACME4J Neural Network file");
+							out.println(
+									"File " + action + " does not exist or is not a valid ACME4J Neural Network file");
 							return;
 						}
 						model.loadData(ModelSelection.TRAINING_DATA, 21, 3, 0.0)
-						.loadModel(action)
-						.testModel(ModelType.CLASSIFICATION, true);
+								.loadModel(action)
+								.testModel(ModelType.CLASSIFICATION, true);
 					}
-				} else if (flag.equals("-train")){
-					if(action.equals("all")){
+				} else if (flag.equals("-train")) {
+					if (action.equals("all")) {
 						model.trainBatch("batch_report");
-					} else{
+					} else {
 						model.loadData(ModelSelection.TRAINING_DATA, 21, 3, 0.75)
-						.train(action)
-						.testModel(ModelType.CLASSIFICATION, true);
+								.train(action)
+								.testModel(ModelType.CLASSIFICATION, true);
 					}
+				} else if (flag.equals("-model")) {
+					File file = new File(action);
+					if (!action.equals("fuzzy") && !file.exists()) {
+						out.println("File " + action + " does not exist or is not a valid ACME4J Neural Network file");
+						return;
+					}
+					NeuralNetworkAgent.MODEL_PATH = action;
+					SwingUtilities.invokeAndWait(() -> { // Sounds like the Command Pattern at work!
+						try {
+							new GameWindow();
+						} catch (Exception e) {
+							out.println("[ERROR] Yikes...problem starting up " + e.getMessage());
+						}
+					});
 				}
 			}
 		}

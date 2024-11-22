@@ -38,9 +38,19 @@ This project aims to train an Automatic Neural Network to navigate through an en
     To run with flags
     - -test <*option*> : **all** - tests all ANN models, **filename** - tests a specific ANN model
     - -train <*option*> : **all**: Does a grid search and build ANN models, **filename**: Builds a specific ANN model
+    - -model <*filename*> : Specify the model file to load. Run with Fuzzy Agent when **filename** is `fuzzy`.
 
     ```
-        ./gradlew run --args="-test all"
+    ./gradlew run --args="-test all"
+    ```
+    ```
+    ./gradlew run --args="-train my_model.ann"
+    ```
+    ```
+    ./gradlew run --args="-model resources/gridSearch/grid_model0132.ann"
+    ```
+    ```
+    ./gradlew run --args="-model fuzzy"
     ```
 
 ## Table of Contents
